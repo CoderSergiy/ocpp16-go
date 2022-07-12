@@ -42,7 +42,17 @@ func CallResultMessageConstructor () CallResultMessage {
 	return callResultObj
 }
 
-/*
+/****************************************************************************************
+ *
+ * Function : CallResultMessageCreator (Constructor)
+ *
+ *  Purpose : Creates a new instance of the CallResultMessage from raw message
+ *
+ *    Input : uniqueID string - id to create message
+ *			  payload map[string]interface{} - payload of the message
+ *
+ *	 Return : CallResultMessage
+*/
 func CallResultMessageWithParam(uniqueID string, payload map[string]interface{}) CallResultMessage {
 	callResultObj := CallResultMessage{}
 	callResultObj.UniqueID = uniqueID
@@ -50,7 +60,7 @@ func CallResultMessageWithParam(uniqueID string, payload map[string]interface{})
 	callResultObj.Signature = ""
 	return callResultObj
 }
-*/
+
 
 /****************************************************************************************
  *
