@@ -10,6 +10,7 @@ package messages
 
 import (
 	"encoding/json"
+	"errors"
 )
 
 
@@ -49,22 +50,20 @@ func CallMessageConstructor () CallMessage {
 
 /****************************************************************************************
  *
- * Function : CallMessage::createCallMessage (Constructor)
+ * Function : CreateCallMessageCreator (Constructor)
  *
- *  Purpose : Creates a new instance of the CallMessage object
+ *  Purpose : Creates a new instance of the CallMessage object using raw message
  *
- *	Return : nil is cannot unmarshal message, otherwise CallMessage object
+ *    Input : rawMessage string - raw message to parse and validate
+ *
+ *	 Return : CallMessage object
 */
-func CreateCallMessageConstructor (rawMessage string) CallMessage {
+func CreateCallMessageCreator (rawMessage string) CallMessage {
 	callMessageObj := CallMessage{}
 
 	// Load JSON from string and check JSON structure
 	if err := callMessageObj.unpackMessage(rawMessage); err != nil {
-		return nil
-	}
-
-	if callMessageObj.MessageTypeID != MESSAGE_TYPE_CALL {
-		return nil
+		return CallMessage{}
 	}
 
 	// Validate 
@@ -80,6 +79,7 @@ func CreateCallMessageConstructor (rawMessage string) CallMessage {
  *
  *	Return : nil is cannot unmarshal message, otherwise CallMessage object
 */
+/*
 func CreateCallMessageConstructor (uniqueID string, action string, payload map[string]interface{}) CallMessage {
 	callMessageObj := CallMessage{}
 	callMessageObj.UniqueID = uniqueID
@@ -88,14 +88,14 @@ func CreateCallMessageConstructor (uniqueID string, action string, payload map[s
 
 	return callMessageObj
 }
-
+*/
 /****************************************************************************************
  *
  * Function : CallMessage::init
  *
  *  Purpose : Initiate variables of the CallMessage structure
  *
- *	Return : Nothing
+ * 	 Return : Nothing
 */
 func (callMessage *CallMessage) init() {
 	callMessage.UniqueID = ""
@@ -110,7 +110,10 @@ func (callMessage *CallMessage) init() {
  *
  *  Purpose : Add data to the payload
  *
- *	Return : Nothing
+ *    Input : 	key string - parameter name
+ *				value string - parameter value
+ *
+ *	 Return : Nothing
 */
 func (callMessage *CallMessage) addPayload (key string, value string) {
 
@@ -133,22 +136,28 @@ func (callMessage CallMessage) getMessageType () MessageType {
  *
  * Function : CallMessage::unpackMessage
  *
- *  Purpose : unmarshal request body to CallMessage struct
+ *  Purpose : unmarshal message to create CallMessage struct
  *
- *	Return : error when cannot unmarshal message, otherwise nil
+ *    Input : 	rawMessage string - raw message to parse and validate
+ *
+ *	 Return : error when cannot unmarshal message, otherwise nil
 */
-func (callMessage *CallMessage) unpackMessage (raw_message string) error {
-
+func (callMessage *CallMessage) unpackMessage (rawMessage string) error {
+	var messageTypeID int
 	parametersArray := []interface{}{
-		&callMessage.MessageTypeID,
+		&messageTypeID,
 		&callMessage.UniqueID,
 		&callMessage.Action,
 		&callMessage.Payload,
-		&callMessage.Signature
+		&callMessage.Signature,
 	}
 
-	if err := json.Unmarshal([]byte(raw_message), &parametersArray); err != nil {
+	if err := json.Unmarshal([]byte(rawMessage), &parametersArray); err != nil {
 		return err
+	}
+
+	if messageTypeID != int(MESSAGE_TYPE_CALL) {
+		return errors.New("Message type ID is not matched CallMessage")
 	}
 
 	return nil
@@ -156,35 +165,37 @@ func (callMessage *CallMessage) unpackMessage (raw_message string) error {
 
 /****************************************************************************************
  *
- * Function : CallMessage::CreateCallMessage
+ * Function : CallMessage::toString
  *
- *  Purpose : Initiate variables of the CallMessage structure
+ *  Purpose : Convert CallMessage struct to string  message
  *
- *	Return : Nothing
+ *	Return : string
+ *			 error if happened, nil otherwise
 */
-func (callMessage *CallMessage) CreateCallMessage () (string,error) {
+func (callMessage *CallMessage) toString () (string,error) {
+	messageType := int(MESSAGE_TYPE_CALL)
 	var parametersArray []interface{}
-	if cm.Signature == "" {
+	if callMessage.Signature == "" {
 		parametersArray = []interface{}{
-			&cm.MessageTypeID,
-			&cm.UniqueID,
-			&cm.Action,
-			&cm.Payload
+			&messageType,
+			&callMessage.UniqueID,
+			&callMessage.Action,
+			&callMessage.Payload,
 		}
 	} else {
 		parametersArray = []interface{}{
-			&cm.MessageTypeID,
-			&cm.UniqueID,
-			&cm.Action,
-			&cm.Payload,
-			&cm.Signature
+			&messageType,
+			&callMessage.UniqueID,
+			&callMessage.Action,
+			&callMessage.Payload,
+			&callMessage.Signature,
 		}
 	}
 
 	jsonResult, err := json.Marshal(parametersArray)
 	if err != nil {
-		return ""
+		return "", err
 	}
 
-	return string(jsonResult)
+	return string(jsonResult), nil
 }
