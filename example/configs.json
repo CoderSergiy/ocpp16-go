@@ -1,0 +1,15 @@
+{
+    "MaxQueueSize" : 100,
+    "Chargers": [
+        {
+            "Name": "CP0001_V1",
+            "Authorization": "NIOERVB8REBOTIEBNRQ==",
+            "HeartBeatInterval": 10
+        },
+        {
+            "Name": "CP0002_V3",
+            "Authorization": "NIOERVB8REBOTIEBNRQ==",
+            "HeartBeatInterval": 10
+        }
+    ]
+}
