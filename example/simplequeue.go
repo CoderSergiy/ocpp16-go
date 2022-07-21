@@ -34,7 +34,7 @@ const (
  *
 *****************************************************************************************/
 type Message struct {
-	Action		string	// BootNotification
+	Action		string	// Action of the message
 	Content		string	// Message content
 }
 

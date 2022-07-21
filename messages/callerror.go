@@ -2,6 +2,7 @@
 	OCPP 1.6 Protocol
 	Filename: callerror.go
 	Owner: Sergiy Safronov
+	Source : github.com/CoderSergiy/ocpp16-go/messages
 	Purpose: File describes all routinse for the Call object of the OCPP protocol
 	=============================================================================
 */
@@ -144,7 +145,7 @@ func (callErrorMessage *CallErrorMessage) unpackMessage (raw_message string) err
 
 /****************************************************************************************
  *
- * Function : CallErrorMessage::toString
+ * Function : CallErrorMessage::ToString
  *
  *  Purpose : Convert CallErrorMessage struct to string  message
  *

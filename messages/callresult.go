@@ -2,6 +2,7 @@
 	OCPP 1.6 Protocol
 	Filename: callresult.go
 	Owner: Sergiy Safronov
+	Source : github.com/CoderSergiy/ocpp16-go/messages
 	Purpose: File describes all routinse for the Call object of the OCPP protocol
 	=============================================================================
 */
@@ -143,7 +144,7 @@ func (callResultMessage *CallResultMessage) unpackMessage (rawMessage string) er
 
 /****************************************************************************************
  *
- * Function : CallResultMessage::toString
+ * Function : CallResultMessage::ToString
  *
  *  Purpose : Convert CallResultMessage struct to string  message
  *

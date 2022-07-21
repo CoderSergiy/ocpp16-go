@@ -2,6 +2,7 @@
 	OCPP 1.6 Protocol
 	Filename: call.go
 	Owner: Sergiy Safronov
+	Source : github.com/CoderSergiy/ocpp16-go/messages
 	Purpose: File describes all routinse for the Call object of the OCPP protocol
 	=============================================================================
 */
@@ -12,9 +13,6 @@ import (
 	"encoding/json"
 	"errors"
 )
-
-
-type MessageType int
 
 const (
     MESSAGE_TYPE_CALL           MessageType = 2
@@ -165,14 +163,14 @@ func (callMessage *CallMessage) unpackMessage (rawMessage string) error {
 
 /****************************************************************************************
  *
- * Function : CallMessage::toString
+ * Function : CallMessage::ToString
  *
  *  Purpose : Convert CallMessage struct to string  message
  *
  *	Return : string
  *			 error if happened, nil otherwise
 */
-func (callMessage *CallMessage) toString () (string,error) {
+func (callMessage *CallMessage) ToString () (string,error) {
 	messageType := int(MESSAGE_TYPE_CALL)
 	var parametersArray []interface{}
 	if callMessage.Signature == "" {
