@@ -10,6 +10,7 @@
 package core
 
 import (
+	"fmt"
 	"reflect"
 	"encoding/json"
 	"errors"
@@ -104,7 +105,13 @@ func (requestHandler *RequestHandler) callRequestHandler(data interface{}, handl
 	in[0] = reflect.ValueOf(data)
 	response := methodCall.Call(in)
 
-	return response[0].String(), errors.New(response[1].String()), response[2].Bool()
+	// Detect if error value is nil
+	if response[1].IsNil() {
+		return response[0].String(), nil, response[2].Bool()
+	}
+
+	// When error present in response
+	return response[0].String(), response[1].Interface().(error), response[2].Bool()
 }
 
 /****************************************************************************************
@@ -131,7 +138,13 @@ func (requestHandler *RequestHandler) callResponseHandler(data interface{}, hand
 	in := make([]reflect.Value, methodCall.Type().NumIn())
 	in[0] = reflect.ValueOf(data)
 	response := methodCall.Call(in)
-	return "", errors.New(response[0].String()), response[1].Bool()
+
+	// Detect if error value is nil
+	if response[0].IsNil() {
+		return "", nil, response[1].Bool()
+	}
+
+	return "", response[0].Interface().(error), response[1].Bool()
 }
 
 /****************************************************************************************
@@ -237,8 +250,7 @@ func (requestHandler *RequestHandler) HandleIncomeMessage(rawMessage string) (st
 			ERROR_TYPE_HANDLER)
 	}
 
-	//Error_Log("Unknown type of the request %d", TypeID)
-	return "", errors.New("Request Handler is not found"), true
+	return "", errors.New(fmt.Sprintf("Handler for Type Message '%v' is not found", messageType)), true
 }
 
 
