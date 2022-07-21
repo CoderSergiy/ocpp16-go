@@ -58,6 +58,10 @@ deps:
 build:
 	$(GOBUILD) -o $(BINARY_FOLDER)/server -v ./server.go
 
+depsupdate:
+	go get -v -t ./...
+
+buildall: depsupdate build
 
 # Command using Docker container
 
