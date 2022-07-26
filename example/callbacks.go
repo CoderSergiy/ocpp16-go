@@ -11,28 +11,28 @@
 package example
 
 import (
-	"time"
-	"net/http"
 	"github.com/CoderSergiy/golib/logging"
 	"github.com/CoderSergiy/ocpp16-go/core"
 	"github.com/CoderSergiy/ocpp16-go/messages"
+	"net/http"
+	"time"
 )
 
 const (
-    WEBSOCKET_KEEP_OPEN		bool = true
-	WEBSOCKET_CLOSE			bool = false
+	WEBSOCKET_KEEP_OPEN bool = true
+	WEBSOCKET_CLOSE     bool = false
 )
 
 /****************************************************************************************
  *	Struct 	: OCPPHandlers
- * 
+ *
  * 	Purpose : Handles struct for each connected charger
  *
 *****************************************************************************************/
 type OCPPHandlers struct {
-	Charger		Charger				// Charger struct which connected to the server
-	Log 		logging.Log			// Pointer to the log
-	txQueue 	SimpleMessageQueue 	// For example queue will be here
+	Charger Charger            // Charger struct which connected to the server
+	Log     logging.Log        // Pointer to the log
+	txQueue SimpleMessageQueue // For example queue will be here
 }
 
 /****************************************************************************************
@@ -44,7 +44,7 @@ type OCPPHandlers struct {
  *	  Input : Nothing
  *
  *	Return : OCPPHandlers object
-*/
+ */
 func OCPPHandlersConstructor() OCPPHandlers {
 	ocppHandlers := OCPPHandlers{}
 	ocppHandlers.init()
@@ -60,9 +60,9 @@ func OCPPHandlersConstructor() OCPPHandlers {
  *	  Input : Nothing
  *
  *	 Return : Nothing
-*/
-func (cs *OCPPHandlers) init () {
-	cs.txQueue.init() 	// Clear queues
+ */
+func (cs *OCPPHandlers) init() {
+	cs.txQueue.init() // Clear queues
 }
 
 /****************************************************************************************
@@ -79,9 +79,9 @@ func (cs *OCPPHandlers) init () {
  *			  error - if happened, nil otherwise
  *			  bool - false - when connection to charger needs to be closed, otherwise true
  *
-*/
-func (cs *OCPPHandlers) finaliseReqHandler (callMessage messages.CallMessage, responseMessage messages.Message, socketStatus bool) (string, error, bool) {
-	
+ */
+func (cs *OCPPHandlers) finaliseReqHandler(callMessage messages.CallMessage, responseMessage messages.Message, socketStatus bool) (string, error, bool) {
+
 	// Convert response message to string format
 	messageStr, err := responseMessage.ToString()
 	if err != nil {
@@ -104,9 +104,9 @@ func (cs *OCPPHandlers) finaliseReqHandler (callMessage messages.CallMessage, re
  *   Return : error - if happened, nil otherwise
  *			  bool - false - when connection to charger needs to be closed, otherwise true
  *
-*/
-func (cs *OCPPHandlers) finaliseRespHandler (uniqueID string, socketStatus bool) (error, bool) {
-	
+ */
+func (cs *OCPPHandlers) finaliseRespHandler(uniqueID string, socketStatus bool) (error, bool) {
+
 	// Before end the handler delete message from txQueue
 	err := cs.txQueue.DeleteByUniqueID(uniqueID)
 
@@ -125,10 +125,10 @@ func (cs *OCPPHandlers) finaliseRespHandler (uniqueID string, socketStatus bool)
  *
  *    Input : uniqueID string - message's unique ID
  *
- *   Return : message's action in string format 
+ *   Return : message's action in string format
  *
-*/
-func (cs *OCPPHandlers) GetActionHandler (uniqueID string) string {
+ */
+func (cs *OCPPHandlers) GetActionHandler(uniqueID string) string {
 
 	// Get action from tx queue by UniqueID
 	message, success := cs.txQueue.GetMessage(uniqueID)
@@ -142,10 +142,6 @@ func (cs *OCPPHandlers) GetActionHandler (uniqueID string) string {
 	return ""
 }
 
-
-
-
-
 /****************************************************************************************
  *
  * Function : OCPPHandlers::Authorisation
@@ -153,12 +149,12 @@ func (cs *OCPPHandlers) GetActionHandler (uniqueID string) string {
  * Purpose : Using to Authorise charger before allow websocket connection
  *
  *   Input : chargerName string - charger name to be validated
- *           request *http.Request - http request object 
+ *           request *http.Request - http request object
  *
  *  Return : true - when charger is authorised, otherwise false
  *
-*/
-func (cs *OCPPHandlers) Authorisation (chargerName string, request *http.Request) (bool) {
+ */
+func (cs *OCPPHandlers) Authorisation(chargerName string, request *http.Request) bool {
 
 	cs.Log.Info_Log("Auth request from URL '%s'", request.RequestURI)
 	cs.Log.Info_Log("Header is '%s'", request.Header["Authorisation"])
@@ -168,8 +164,6 @@ func (cs *OCPPHandlers) Authorisation (chargerName string, request *http.Request
 
 	return true
 }
-
-
 
 /* Define Call Handlers =========================================================================================
 =================================================================================================================
@@ -187,8 +181,8 @@ func (cs *OCPPHandlers) Authorisation (chargerName string, request *http.Request
  *			  error - if happened, nil otherwise
  *			  bool - false - when connection to charger needs to be closed, otherwise true
  *
-*/
-func (cs *OCPPHandlers) BootNotificationRequestHandler (callMessage messages.CallMessage) (string, error, bool) {
+ */
+func (cs *OCPPHandlers) BootNotificationRequestHandler(callMessage messages.CallMessage) (string, error, bool) {
 	cs.Log.Info_Log("[%v] BootNotificationRequest Action", callMessage.UniqueID)
 
 	// Define registration status for the response
@@ -198,12 +192,12 @@ func (cs *OCPPHandlers) BootNotificationRequestHandler (callMessage messages.Cal
 	}
 	//Create payload
 	bootNotificationResp := core.BootNotificationResponse{
-		Status: status,
+		Status:            status,
 		HeartbeatInterval: 300,
-		CurrentTime: time.Now().Format("2006-01-02 15:04:05.000"),
+		CurrentTime:       time.Now().Format("2006-01-02 15:04:05.000"),
 	}
 	// Create CallResult message
-	callMessageResponse := messages.CallResultMessageWithParam (
+	callMessageResponse := messages.CallResultMessageWithParam(
 		callMessage.UniqueID,
 		bootNotificationResp.GetPayload(),
 	)
@@ -223,8 +217,8 @@ func (cs *OCPPHandlers) BootNotificationRequestHandler (callMessage messages.Cal
  *			  error - if happened, nil otherwise
  *			  bool - false - when connection to charger needs to be closed, otherwise true
  *
-*/
-func (cs *OCPPHandlers) AuthorizeRequestHandler (callMessage messages.CallMessage) (string, error, bool) {
+ */
+func (cs *OCPPHandlers) AuthorizeRequestHandler(callMessage messages.CallMessage) (string, error, bool) {
 	cs.Log.Info_Log("[%v] AuthorizeRequest Action", callMessage.UniqueID)
 
 	// Check Auth flag
@@ -252,8 +246,8 @@ func (cs *OCPPHandlers) AuthorizeRequestHandler (callMessage messages.CallMessag
  *			  error - if happened, nil otherwise
  *			  bool - false - when connection to charger needs to be closed, otherwise true
  *
-*/
-func (cs *OCPPHandlers) HeartbeatRequestHandler (callMessage messages.CallMessage) (string, error, bool) {
+ */
+func (cs *OCPPHandlers) HeartbeatRequestHandler(callMessage messages.CallMessage) (string, error, bool) {
 	cs.Log.Info_Log("[%v] HeartbeatRequest Action", callMessage.UniqueID)
 
 	// Create payload of the heartbeat response
@@ -261,17 +255,13 @@ func (cs *OCPPHandlers) HeartbeatRequestHandler (callMessage messages.CallMessag
 	heartBeatResponse.Init()
 
 	// Create CallResultMessage
-	callMessageResponse := messages.CallResultMessageWithParam (
+	callMessageResponse := messages.CallResultMessageWithParam(
 		callMessage.UniqueID,
 		heartBeatResponse.GetPayload(),
 	)
 
 	return cs.finaliseReqHandler(callMessage, &callMessageResponse, WEBSOCKET_KEEP_OPEN)
 }
-
-
-
-
 
 /* Define Response Handlers ===================================================================================
 ===============================================================================================================
@@ -289,18 +279,14 @@ func (cs *OCPPHandlers) HeartbeatRequestHandler (callMessage messages.CallMessag
  *			  error - if happened, nil otherwise
  *			  bool - false - when connection to charger needs to be closed, otherwise true
  *
-*/
-func (cs *OCPPHandlers) AuthorizeResponseHandler (callResultMessage messages.CallResultMessage) (error, bool) {
+ */
+func (cs *OCPPHandlers) AuthorizeResponseHandler(callResultMessage messages.CallResultMessage) (error, bool) {
 	cs.Log.Info_Log("[%v] AuthorizeResponse Action", callResultMessage.UniqueID)
 
 	// Perform Auth Routine
 
 	return cs.finaliseRespHandler(callResultMessage.UniqueID, WEBSOCKET_KEEP_OPEN)
 }
-
-
-
-
 
 /* Define Error Handler ==============================================================================
 ======================================================================================================
@@ -318,8 +304,8 @@ func (cs *OCPPHandlers) AuthorizeResponseHandler (callResultMessage messages.Cal
  *			  error - if happened, nil otherwise
  *			  bool - false - when connection to charger needs to be closed, otherwise true
  *
-*/
-func (cs *OCPPHandlers) OCPPErrorHandler (callErrortMessage messages.CallErrorMessage) (error, bool) {
+ */
+func (cs *OCPPHandlers) OCPPErrorHandler(callErrortMessage messages.CallErrorMessage) (error, bool) {
 	cs.Log.Info_Log("[%v] OCPPErrorHandler", callErrortMessage.UniqueID)
 
 	// Handle OCPP error

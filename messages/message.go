@@ -13,11 +13,11 @@ type MessageType int
 
 /****************************************************************************************
  *	Interface : Message
- * 
+ *
  * 	  Purpose : Interface for Call, CallResult and CallError
  *
 *****************************************************************************************/
 type Message interface {
-    getMessageType () MessageType
-    ToString () (string,error)
+	getMessageType() MessageType
+	ToString() (string, error)
 }

@@ -14,19 +14,19 @@ import (
 	"errors"
 )
 
-const	MESSAGE_TYPE_CALL_ERROR    MessageType = 4
+const MESSAGE_TYPE_CALL_ERROR MessageType = 4
 
 /****************************************************************************************
  *	Struct 	: CallErrorMessage
- * 
+ *
  * 	Purpose : Object handles the Call Error message structure
  *
 *****************************************************************************************/
 type CallErrorMessage struct {
-	UniqueID			string
-	ErrorCode			string
-	ErrorDescription	string
-	ErrorDetails		map[string]interface{}
+	UniqueID         string
+	ErrorCode        string
+	ErrorDescription string
+	ErrorDetails     map[string]interface{}
 }
 
 /****************************************************************************************
@@ -36,8 +36,8 @@ type CallErrorMessage struct {
  *  Purpose : Creates a new instance of the CallErrorMessage object
  *
  *	Return : CallErrorMessage
-*/
-func CallErrorMessageConstructor () CallErrorMessage {
+ */
+func CallErrorMessageConstructor() CallErrorMessage {
 	callErrorObj := CallErrorMessage{}
 	callErrorObj.init()
 	return callErrorObj
@@ -52,8 +52,8 @@ func CallErrorMessageConstructor () CallErrorMessage {
  *    Input : rawMessage string - raw message to parse and validate
  *
  *	 Return : CallErrorMessage
-*/
-func CallErrorMessageCreator (rawMessage string) CallErrorMessage {
+ */
+func CallErrorMessageCreator(rawMessage string) CallErrorMessage {
 	callErrorObj := CallErrorMessage{}
 
 	// Load JSON from string and check JSON structure
@@ -61,7 +61,7 @@ func CallErrorMessageCreator (rawMessage string) CallErrorMessage {
 		return CallErrorMessage{}
 	}
 
-	// Validate 
+	// Validate
 
 	return callErrorObj
 }
@@ -73,8 +73,8 @@ func CallErrorMessageCreator (rawMessage string) CallErrorMessage {
  *  Purpose : Initiate variables of the CallErrorMessage structure
  *
  *	 Return : Nothing
-*/
-func (cem *CallErrorMessage) init () {
+ */
+func (cem *CallErrorMessage) init() {
 	cem.UniqueID = ""
 	cem.ErrorCode = ""
 	cem.ErrorDescription = ""
@@ -88,7 +88,7 @@ func (cem *CallErrorMessage) init () {
  *  Purpose : Creates a new instance of the CallMessage object
  *
  *	Return : nil is cannot unmarshal message, otherwise CallMessage object
-*/
+ */
 /*
 func CreateCallError (uniqueID string, errorCode string, errorDescription string, errorDetails map[string]interface{}) string {
 	ce := CallErrorConstructor()
@@ -107,8 +107,8 @@ func CreateCallError (uniqueID string, errorCode string, errorDescription string
  *  Purpose : Return Call Error message type
  *
  *	 Return : MessageType
-*/
-func (callErrorMessage CallErrorMessage) getMessageType () MessageType {
+ */
+func (callErrorMessage CallErrorMessage) getMessageType() MessageType {
 	return MESSAGE_TYPE_CALL_ERROR
 }
 
@@ -121,8 +121,8 @@ func (callErrorMessage CallErrorMessage) getMessageType () MessageType {
  *    Input : rawMessage string - raw message to parse and validate
  *
  *	 Return : error when cannot unmarshal message, otherwise nil
-*/
-func (callErrorMessage *CallErrorMessage) unpackMessage (raw_message string) error {
+ */
+func (callErrorMessage *CallErrorMessage) unpackMessage(raw_message string) error {
 	var messageTypeID int
 	tmp := []interface{}{
 		&messageTypeID,
@@ -153,8 +153,8 @@ func (callErrorMessage *CallErrorMessage) unpackMessage (raw_message string) err
  *
  *	 Return : string
  *			  error if happened, nil otherwise
-*/
-func (callErrorMessage *CallErrorMessage) ToString () (string,error) {
+ */
+func (callErrorMessage *CallErrorMessage) ToString() (string, error) {
 
 	messageTypeID := MESSAGE_TYPE_CALL_ERROR
 	var parametersArray []interface{}

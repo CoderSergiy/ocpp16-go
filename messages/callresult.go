@@ -14,18 +14,18 @@ import (
 	"errors"
 )
 
-const	MESSAGE_TYPE_CALL_RESULT    MessageType = 3
+const MESSAGE_TYPE_CALL_RESULT MessageType = 3
 
 /****************************************************************************************
  *	Struct 	: CallResultMessage
- * 
+ *
  * 	Purpose : Object handles the Call Result message structure
  *
 *****************************************************************************************/
 type CallResultMessage struct {
-	UniqueID		string
-	Payload			map[string]interface{}
-	Signature		string
+	UniqueID  string
+	Payload   map[string]interface{}
+	Signature string
 }
 
 /****************************************************************************************
@@ -35,9 +35,9 @@ type CallResultMessage struct {
  *  Purpose : Creates a new instance of the CallResultMessage object
  *
  *	 Return : CallResultMessage
-*/
+ */
 
-func CallResultMessageConstructor () CallResultMessage {
+func CallResultMessageConstructor() CallResultMessage {
 	callResultObj := CallResultMessage{}
 	callResultObj.init()
 	return callResultObj
@@ -53,7 +53,7 @@ func CallResultMessageConstructor () CallResultMessage {
  *			  payload map[string]interface{} - payload of the message
  *
  *	 Return : CallResultMessage
-*/
+ */
 func CallResultMessageWithParam(uniqueID string, payload map[string]interface{}) CallResultMessage {
 	callResultObj := CallResultMessage{}
 	callResultObj.UniqueID = uniqueID
@@ -62,7 +62,6 @@ func CallResultMessageWithParam(uniqueID string, payload map[string]interface{})
 	return callResultObj
 }
 
-
 /****************************************************************************************
  *
  * Function : CallResultMessage::init
@@ -70,7 +69,7 @@ func CallResultMessageWithParam(uniqueID string, payload map[string]interface{})
  *  Purpose : Initiate variables of the CallResultMessage structure
  *
  *	Return : Nothing
-*/
+ */
 func (callResultMessage *CallResultMessage) init() {
 	callResultMessage.UniqueID = ""
 	callResultMessage.Payload = make(map[string]interface{})
@@ -86,8 +85,8 @@ func (callResultMessage *CallResultMessage) init() {
  *    Input : rawMessage string - raw message to parse and validate
  *
  *	 Return : CallResultMessage
-*/
-func CallResultMessageCreator (rawMessage string) CallResultMessage {
+ */
+func CallResultMessageCreator(rawMessage string) CallResultMessage {
 	callResultObj := CallResultMessage{}
 
 	// Load JSON from string and check JSON structure
@@ -95,7 +94,7 @@ func CallResultMessageCreator (rawMessage string) CallResultMessage {
 		return CallResultMessage{}
 	}
 
-	// Validate 
+	// Validate
 
 	return callResultObj
 }
@@ -107,8 +106,8 @@ func CallResultMessageCreator (rawMessage string) CallResultMessage {
  *  Purpose : Return Call Result message type
  *
  *	Return : MessageType
-*/
-func (crm CallResultMessage) getMessageType () MessageType {
+ */
+func (crm CallResultMessage) getMessageType() MessageType {
 	return MESSAGE_TYPE_CALL_RESULT
 }
 
@@ -121,8 +120,8 @@ func (crm CallResultMessage) getMessageType () MessageType {
  *    Input : rawMessage string - raw message to parse and validate
  *
  *	 Return : error when cannot unmarshal message, otherwise nil
-*/
-func (callResultMessage *CallResultMessage) unpackMessage (rawMessage string) error {
+ */
+func (callResultMessage *CallResultMessage) unpackMessage(rawMessage string) error {
 	var messageTypeID int
 	parametersArray := []interface{}{
 		&messageTypeID,
@@ -152,8 +151,8 @@ func (callResultMessage *CallResultMessage) unpackMessage (rawMessage string) er
  *
  *	 Return : string
  *			  error if happened, nil otherwise
-*/
-func (callResultMessage *CallResultMessage) ToString () (string,error) {
+ */
+func (callResultMessage *CallResultMessage) ToString() (string, error) {
 	var parametersArray []interface{}
 
 	if callResultMessage.Signature == "" {

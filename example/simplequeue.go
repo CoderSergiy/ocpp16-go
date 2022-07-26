@@ -11,43 +11,42 @@
 package example
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"sync"
-	"errors"
-	"encoding/json"
 )
-
 
 type QueueMessageType int
 
 const (
-    MESSAGE_TYPE_SEND           QueueMessageType = 1
-    MESSAGE_TYPE_SENT           QueueMessageType = 2
-    MESSAGE_TYPE_RECEIVED       QueueMessageType = 3
+	MESSAGE_TYPE_SEND     QueueMessageType = 1
+	MESSAGE_TYPE_SENT     QueueMessageType = 2
+	MESSAGE_TYPE_RECEIVED QueueMessageType = 3
 )
 
 /****************************************************************************************
  *	Struct 	: Message
- * 
+ *
  * 	Purpose : Struct handles message's parameters
  *
 *****************************************************************************************/
 type Message struct {
-	Action		string	// Action of the message
-	Content		string	// Message content
+	Action  string // Action of the message
+	Content string // Message content
 }
 
 /****************************************************************************************
  *	Struct 	: SimpleMessageQueue
- * 
+ *
  * 	Purpose : Struct handles messages queue routines
  *
 *****************************************************************************************/
 type SimpleMessageQueue struct {
-	MaxSize			int
-	MessageQueue	map[string]Message
-	queueMux 		sync.Mutex
+	MaxSize      int
+	MessageQueue map[string]Message
+	queueMux     sync.Mutex
 }
 
 /****************************************************************************************
@@ -59,8 +58,8 @@ type SimpleMessageQueue struct {
  *	  Input : Nothing
  *
  *	 Return : Nothing
-*/
-func (queue *SimpleMessageQueue) init () {
+ */
+func (queue *SimpleMessageQueue) init() {
 	queue.MaxSize = 10
 	queue.MessageQueue = make(map[string]Message)
 }
@@ -76,8 +75,8 @@ func (queue *SimpleMessageQueue) init () {
  *
  *   Return : error - if happened, nil otherwise
  *
-*/
-func (queue *SimpleMessageQueue) Add (uniqueID string, message Message) error {
+ */
+func (queue *SimpleMessageQueue) Add(uniqueID string, message Message) error {
 	// Lock the queue before any changes
 	queue.queueMux.Lock()
 	defer queue.queueMux.Unlock()
@@ -103,8 +102,8 @@ func (queue *SimpleMessageQueue) Add (uniqueID string, message Message) error {
  *
  *   Return : error - if happened, nil otherwise
  *
-*/
-func (queue *SimpleMessageQueue) DeleteByUniqueID (uniqueID string) error {
+ */
+func (queue *SimpleMessageQueue) DeleteByUniqueID(uniqueID string) error {
 	// Lock the queue before any changes
 	queue.queueMux.Lock()
 	defer queue.queueMux.Unlock()
@@ -130,8 +129,8 @@ func (queue *SimpleMessageQueue) DeleteByUniqueID (uniqueID string) error {
  *   Return : Message
  *			  bool - true when message exists, false otherwise
  *
-*/
-func (queue *SimpleMessageQueue) GetMessage (uniqueID string) (Message, bool) {
+ */
+func (queue *SimpleMessageQueue) GetMessage(uniqueID string) (Message, bool) {
 	// Check if uniqueID is exists in the queue
 	if message, isKeyPresent := queue.MessageQueue[uniqueID]; isKeyPresent {
 		// Return message
@@ -151,40 +150,34 @@ func (queue *SimpleMessageQueue) GetMessage (uniqueID string) (Message, bool) {
  *
  *   Return : string - Parameters of the queue in the text format
  *
-*/
-func (queue *SimpleMessageQueue) printStatus () string {
+ */
+func (queue *SimpleMessageQueue) printStatus() string {
 	return fmt.Sprintf("Size of the queue is %v where max size set to %v", len(queue.MessageQueue), queue.MaxSize)
 }
 
-
-
-
-
-
-
 /****************************************************************************************
  *	Struct 	: Charger
- * 
+ *
  * 	Purpose : Struct handles charger parameters in the gorutines
  *
 *****************************************************************************************/
 type Charger struct {
-	AuthToken			string
-	HeartBeatInterval	int
-	AuthConnection		bool
-	WebSocketConnected	bool
-	InboundIP			string
+	AuthToken          string
+	HeartBeatInterval  int
+	AuthConnection     bool
+	WebSocketConnected bool
+	InboundIP          string
 }
 
 /****************************************************************************************
  *	Struct 	: Configs
- * 
+ *
  * 	Purpose : Object handles configurations from the file
  *
 *****************************************************************************************/
 type Configs struct {
-	Chargers			map[string]Charger	`json:"Chargers"`
-	MaxQueueSize		int					`json:"MaxQueueSize"`
+	Chargers     map[string]Charger `json:"Chargers"`
+	MaxQueueSize int                `json:"MaxQueueSize"`
 }
 
 /****************************************************************************************
@@ -196,7 +189,7 @@ type Configs struct {
  *	  Input : Nothing
  *
  *	Return : Configs object
-*/
+ */
 func ServerConfigsConstructor() Configs {
 	configs := Configs{}
 	configs.init()
@@ -212,7 +205,7 @@ func ServerConfigsConstructor() Configs {
  *	  Input : Nothing
  *
  *	 Return : Nothing
-*/
+ */
 func (conf *Configs) init() {
 	conf.Chargers = make(map[string]Charger)
 	conf.MaxQueueSize = 10
@@ -228,8 +221,8 @@ func (conf *Configs) init() {
  *
  *	 Return : Charger - charger object
  * 			  error - error if happened
-*/
-func (conf *Configs) GetChargerObj (chargerName string) (Charger, error) {
+ */
+func (conf *Configs) GetChargerObj(chargerName string) (Charger, error) {
 
 	if charger, isKeyPresent := conf.Chargers[chargerName]; isKeyPresent {
 		// Requested charger is exists in the configs
@@ -241,29 +234,27 @@ func (conf *Configs) GetChargerObj (chargerName string) (Charger, error) {
 
 }
 
-
-
 /****************************************************************************************
  *	Struct 	: ChargerFromFile
- * 
+ *
  * 	Purpose : Struct handles charger's parameters from config file
  *
 *****************************************************************************************/
 type ChargerFromFile struct {
-	Name				string 	`json:"Name"`
-	Authorization		string 	`json:"Authorization"`
-	HeartBeatInterval	int 	`json:"HeartBeatInterval"`
+	Name              string `json:"Name"`
+	Authorization     string `json:"Authorization"`
+	HeartBeatInterval int    `json:"HeartBeatInterval"`
 }
 
 /****************************************************************************************
  *	Struct 	: FileConfigs
- * 
+ *
  * 	Purpose : Struct handles configurations from file
  *
 *****************************************************************************************/
 type FileConfigs struct {
-	Chargers			[]ChargerFromFile	`json:"Chargers"`
-	MaxQueueSize		int					`json:"MaxQueueSize"`
+	Chargers     []ChargerFromFile `json:"Chargers"`
+	MaxQueueSize int               `json:"MaxQueueSize"`
 }
 
 /****************************************************************************************
@@ -276,7 +267,7 @@ type FileConfigs struct {
  *
  *	 Return : Configs - Configs object
  * 			  error - error if happened
-*/
+ */
 func SetConfigsFromFile(fileName string) (Configs, error) {
 	configs := Configs{}
 	configs.init()
@@ -285,12 +276,12 @@ func SetConfigsFromFile(fileName string) (Configs, error) {
 	if fileName == "" {
 		return configs, errors.New("Filename is empty")
 	}
-	
+
 	// Read file context to the buffer
-    fileContentBytes, fileError := ioutil.ReadFile(fileName)
-    if fileError != nil {
-        return configs, fileError
-    }
+	fileContentBytes, fileError := ioutil.ReadFile(fileName)
+	if fileError != nil {
+		return configs, fileError
+	}
 
 	// Unmarshal the content of the file to the Configs struct
 	conf := FileConfigs{}
@@ -310,5 +301,3 @@ func SetConfigsFromFile(fileName string) (Configs, error) {
 
 	return configs, nil
 }
-
-

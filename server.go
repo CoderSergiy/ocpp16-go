@@ -11,38 +11,37 @@
 package main
 
 import (
-    "github.com/julienschmidt/httprouter"
-    "net/http"
-	"time"
-	"github.com/gorilla/websocket"
-	"github.com/CoderSergiy/ocpp16-go/example"
-	"github.com/CoderSergiy/ocpp16-go/core"
 	"github.com/CoderSergiy/golib/logging"
 	"github.com/CoderSergiy/golib/timelib"
 	"github.com/CoderSergiy/golib/tools"
+	"github.com/CoderSergiy/ocpp16-go/core"
+	"github.com/CoderSergiy/ocpp16-go/example"
+	"github.com/gorilla/websocket"
+	"github.com/julienschmidt/httprouter"
+	"net/http"
+	"time"
 )
 
 const (
-	configFilePath 	string = "/tmp/configs.json"
-	logFilesPath 	string = "/tmp/logs/server"
+	configFilePath string = "/tmp/configs.json"
+	logFilesPath   string = "/tmp/logs/server"
 )
 
 var (
-	log logging.Log
+	log           logging.Log
 	ServerConfigs example.Configs
 )
 
-
 /****************************************************************************************
  *	Struct 	: GoRoutineSet
- * 
+ *
  * 	Purpose : Handles goroutine parameters
  *
 *****************************************************************************************/
 type GoRoutineSet struct {
-	WriteChannel	chan string
-	Active 			bool
-	DateCreated 	int64
+	WriteChannel chan string
+	Active       bool
+	DateCreated  int64
 }
 
 /****************************************************************************************
@@ -53,18 +52,15 @@ type GoRoutineSet struct {
  *
  *	  Input : Nothing
  *
- *	Return : GoRoutineSet object
-*/
+ *	 Return : GoRoutineSet object
+ */
 func GoRoutineSetConstructor() GoRoutineSet {
-    gSet := GoRoutineSet{}
-    gSet.Active = true
-    gSet.DateCreated = int64(time.Now().Unix())
-	gSet.WriteChannel = make (chan string)
-    return (gSet)
+	gSet := GoRoutineSet{}
+	gSet.Active = true
+	gSet.DateCreated = int64(time.Now().Unix())
+	gSet.WriteChannel = make(chan string)
+	return (gSet)
 }
-
-
-
 
 /****************************************************************************************
  *
@@ -73,7 +69,7 @@ func GoRoutineSetConstructor() GoRoutineSet {
  *  Purpose : Main method to start server
  *
  *   Return : Nothing
-*/
+ */
 func main() {
 	log = logging.LogConstructor(logFilesPath, true)
 	log.Info_Log("Server started.")
@@ -92,11 +88,10 @@ func main() {
 	// Define http router
 	router := httprouter.New()
 	// Set router for the ocpp V1.6 connection in the json format
-    router.GET("/ocppj/1.6/:chargerName", wsChargerHandler)
+	router.GET("/ocppj/1.6/:chargerName", wsChargerHandler)
 	// Start server
 	log.Error_Log("Server fata errorr: '%v'", http.ListenAndServe(":8080", router))
 }
-
 
 /****************************************************************************************
  *
@@ -109,10 +104,10 @@ func main() {
  *			  ps httprouter.Params - router parameter
  *
  *   Return : Nothing
-*/
-func wsChargerHandler (w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+ */
+func wsChargerHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	tm := timelib.EventTimerConstructor()
-    log.Info_Log("Handle income request from Host '%v' and Path '%v'", r.URL.Host, r.URL.Path)
+	log.Info_Log("Handle income request from Host '%v' and Path '%v'", r.URL.Host, r.URL.Path)
 
 	chargerName := ps.ByName("chargerName")
 	log.Info_Log("HTTP is connected. Charger name '%v'", chargerName)
@@ -146,7 +141,7 @@ func wsChargerHandler (w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	log.Info_Log("Websocket is connected. Charger name '%v'", chargerName)
 
 	// Create log instance with file name "server.{chargerName}"
-	chargerLog := logging.LogConstructor(logFilesPath + "." + chargerName, true)
+	chargerLog := logging.LogConstructor(logFilesPath+"."+chargerName, true)
 	//log.Info_Log("Logging in file '%v'", chargerLog.fileName)
 
 	ocppHandlers := example.OCPPHandlersConstructor()
@@ -185,7 +180,7 @@ func wsChargerHandler (w http.ResponseWriter, r *http.Request, ps httprouter.Par
  *
  *   Return : Nothing
  *
-*/
+ */
 
 func logReaderRD(conn *websocket.Conn, chargerName string, gs *GoRoutineSet, ocppHandlers *example.OCPPHandlers, chargerLog *logging.Log) {
 	defer conn.Close()
@@ -242,15 +237,15 @@ func logReaderRD(conn *websocket.Conn, chargerName string, gs *GoRoutineSet, ocp
  *
  *   Return : Nothing
  *
-*/
+ */
 
 func logReaderWR(conn *websocket.Conn, chargerName string, gs *GoRoutineSet, chargerLog *logging.Log) {
 	defer conn.Close()
-    chargerLog.Info_Log("[%v] Start WR gorutine for charger '%v'", tools.GetGoID(), chargerName)
+	chargerLog.Info_Log("[%v] Start WR gorutine for charger '%v'", tools.GetGoID(), chargerName)
 
 	for {
 		// Wait for the message from channel
-		message := <- gs.WriteChannel
+		message := <-gs.WriteChannel
 
 		// Check if gorutine must to be finished
 		if gs.Active == false {
@@ -260,8 +255,8 @@ func logReaderWR(conn *websocket.Conn, chargerName string, gs *GoRoutineSet, cha
 
 		//Send response to the charger
 		if err := conn.WriteMessage(websocket.TextMessage, []byte(message)); err != nil {
-		    chargerLog.Error_Log("Send error: '%v'", err)
-		    return
+			chargerLog.Error_Log("Send error: '%v'", err)
+			return
 		}
 
 		chargerLog.Info_Log("Sent to charger '%v'", message)

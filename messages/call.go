@@ -15,20 +15,20 @@ import (
 )
 
 const (
-    MESSAGE_TYPE_CALL           MessageType = 2
+	MESSAGE_TYPE_CALL MessageType = 2
 )
 
 /****************************************************************************************
  *	Struct 	: CallMessage
- * 
+ *
  * 	Purpose : Object handles the Call message structure
  *
 *****************************************************************************************/
 type CallMessage struct {
-	UniqueID		string
-	Action			string 
-	Payload			map[string]interface{}
-	Signature 		string
+	UniqueID  string
+	Action    string
+	Payload   map[string]interface{}
+	Signature string
 }
 
 /****************************************************************************************
@@ -38,8 +38,8 @@ type CallMessage struct {
  *  Purpose : Creates a new instance of the CallMessage object
  *
  *	Return : CallMessage object
-*/
-func CallMessageConstructor () CallMessage {
+ */
+func CallMessageConstructor() CallMessage {
 	//Define CallMessage object
 	callMessageObj := CallMessage{}
 	callMessageObj.init()
@@ -55,8 +55,8 @@ func CallMessageConstructor () CallMessage {
  *    Input : rawMessage string - raw message to parse and validate
  *
  *	 Return : CallMessage object
-*/
-func CreateCallMessageCreator (rawMessage string) CallMessage {
+ */
+func CreateCallMessageCreator(rawMessage string) CallMessage {
 	callMessageObj := CallMessage{}
 
 	// Load JSON from string and check JSON structure
@@ -64,7 +64,7 @@ func CreateCallMessageCreator (rawMessage string) CallMessage {
 		return CallMessage{}
 	}
 
-	// Validate 
+	// Validate
 
 	return callMessageObj
 }
@@ -76,7 +76,7 @@ func CreateCallMessageCreator (rawMessage string) CallMessage {
  *  Purpose : Creates a new instance of the CallMessage object
  *
  *	Return : nil is cannot unmarshal message, otherwise CallMessage object
-*/
+ */
 /*
 func CreateCallMessageConstructor (uniqueID string, action string, payload map[string]interface{}) CallMessage {
 	callMessageObj := CallMessage{}
@@ -94,7 +94,7 @@ func CreateCallMessageConstructor (uniqueID string, action string, payload map[s
  *  Purpose : Initiate variables of the CallMessage structure
  *
  * 	 Return : Nothing
-*/
+ */
 func (callMessage *CallMessage) init() {
 	callMessage.UniqueID = ""
 	callMessage.Action = ""
@@ -112,8 +112,8 @@ func (callMessage *CallMessage) init() {
  *				value string - parameter value
  *
  *	 Return : Nothing
-*/
-func (callMessage *CallMessage) addPayload (key string, value string) {
+ */
+func (callMessage *CallMessage) addPayload(key string, value string) {
 
 	callMessage.Payload[key] = value
 }
@@ -125,8 +125,8 @@ func (callMessage *CallMessage) addPayload (key string, value string) {
  *  Purpose : Return Call message type
  *
  *	Return : MessageType
-*/
-func (callMessage CallMessage) getMessageType () MessageType {
+ */
+func (callMessage CallMessage) getMessageType() MessageType {
 	return MESSAGE_TYPE_CALL
 }
 
@@ -139,8 +139,8 @@ func (callMessage CallMessage) getMessageType () MessageType {
  *    Input : 	rawMessage string - raw message to parse and validate
  *
  *	 Return : error when cannot unmarshal message, otherwise nil
-*/
-func (callMessage *CallMessage) unpackMessage (rawMessage string) error {
+ */
+func (callMessage *CallMessage) unpackMessage(rawMessage string) error {
 	var messageTypeID int
 	parametersArray := []interface{}{
 		&messageTypeID,
@@ -169,8 +169,8 @@ func (callMessage *CallMessage) unpackMessage (rawMessage string) error {
  *
  *	Return : string
  *			 error if happened, nil otherwise
-*/
-func (callMessage *CallMessage) ToString () (string,error) {
+ */
+func (callMessage *CallMessage) ToString() (string, error) {
 	messageType := int(MESSAGE_TYPE_CALL)
 	var parametersArray []interface{}
 	if callMessage.Signature == "" {

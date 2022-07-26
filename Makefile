@@ -7,6 +7,7 @@ GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 GOMOD=$(GOCMD) mod
+GOFMT=$(GOCMD)fmt
 
 # Folders definitions
 BINARY_FOLDER=bin
@@ -56,6 +57,7 @@ deps:
 	$(GOGET) github.com/CoderSergiy/golib/tools
 
 build:
+	$(GOFMT) -s ./example/*.go
 	$(GOBUILD) -o $(BINARY_FOLDER)/server -v ./server.go
 
 depsupdate:
