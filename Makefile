@@ -20,7 +20,7 @@ DOCKERFILE = "Dockerfile"
 PROJECT_PATH = $(shell pwd)
 
 define docker-build =
-	docker build -t ${IMAGE_NAME}:${VERSION} -f ${DOCKERFILE} .
+	docker build -t ${IMAGE_NAME}:${VERSION} -f dev/${DOCKERFILE} .
 	docker run --rm \
 		--name toolbox-ocppexample-tests \
 		-v ${PROJECT_PATH}:/go/ocppexample \

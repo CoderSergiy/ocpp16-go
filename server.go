@@ -120,7 +120,7 @@ func wsChargerHandler (w http.ResponseWriter, r *http.Request, ps httprouter.Par
 	// Get Charger from the Configs
 	chargerObj, err := ServerConfigs.GetChargerObj(chargerName)
 	if err != nil {
-		// There is no charger with specifed name in the configs
+		// There is no charger with specified name in the configs
 		http.Error(w, "Not allowed to connect for specified charger", http.StatusBadRequest)
 		log.Error_Log("Not allowed to connect for specified charger '%v' with error '%v'", chargerName, err)
 		return
