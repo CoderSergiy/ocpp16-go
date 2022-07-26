@@ -1,5 +1,6 @@
 ocpp1.6-go
 =================
+![Project status](https://img.shields.io/badge/version-0.1.1-green.svg)
 ![License](https://img.shields.io/dub/l/vibe-d.svg)
 
 Open Charge Point Protocol (OCPP) is a standard open protocol for communication between Charge Points and Central System and is designed to accommodate any type of charging technique. 
