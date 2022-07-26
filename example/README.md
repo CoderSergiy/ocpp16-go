@@ -54,5 +54,7 @@ func (cs *OCPPHandlers) BootNotificationRequestHandler (callMessage messages.Cal
 ```
 ### Requirements for the design
 Name of the methods for the call requests has to in in the format: action + "RequestHandler", as example "HeartbeatRequestHandler".
-For the responses handlers have to be in the formar: action + "ResponseHandler", as example "AuthorizeResponseHandler".
+
+For the responses handlers have to be in the formar: action + "ResponseHandler", as example "AuthorizeResponseHandler". 
+
 The error handler named "OCPPErrorHandler".
