@@ -56,14 +56,19 @@ deps:
 	$(GOGET) github.com/CoderSergiy/golib/timerlib
 	$(GOGET) github.com/CoderSergiy/golib/tools
 
+fmts:
+	$(GOFMT) -s -d ./core/*.go
+	$(GOFMT) -s -d ./messages/*.go
+	$(GOFMT) -s -d ./example/*.go
+	$(GOFMT) -s -d *.go
+
 build:
-	$(GOFMT) -s ./example/*.go
 	$(GOBUILD) -o $(BINARY_FOLDER)/server -v ./server.go
 
 depsupdate:
 	go get -v -t ./...
 
-buildall: depsupdate build
+buildall: depsupdate fmts build
 
 # Command using Docker container
 
@@ -78,5 +83,5 @@ dockerbuild:
 	$(call docker-build, "buildall")
 
 dockerserverrun:
-	$(call docker-build, "buildall")
+	$(call docker-build, "build")
 	$(call docker-run, 	 "$(BINARY_FOLDER)/server")

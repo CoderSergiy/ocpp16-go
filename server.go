@@ -217,10 +217,6 @@ func logReaderRD(conn *websocket.Conn, chargerName string, gs *GoRoutineSet, ocp
 
 	}
 
-	// At this point webSocket needs to be closed
-	// Clear memory allocated for ocppHandler
-	ocppHandlers = nil
-
 	chargerLog.Info_Log("[%v] Reading goroutine is finished", tools.GetGoID())
 }
 

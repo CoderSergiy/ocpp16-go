@@ -10,26 +10,26 @@
 package core
 
 import (
-	"fmt"
-	"reflect"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/CoderSergiy/ocpp16-go/messages"
+	"reflect"
 )
 
 const (
-    REQUEST_TYPE_HANDLER        string = "RequestHandler"
-    RESPONSE_TYPE_HANDLER		string = "ResponseHandler"
-    ERROR_TYPE_HANDLER          string = "OCPPErrorHandler"
+	REQUEST_TYPE_HANDLER  string = "RequestHandler"
+	RESPONSE_TYPE_HANDLER string = "ResponseHandler"
+	ERROR_TYPE_HANDLER    string = "OCPPErrorHandler"
 
-	GET_ACTION_HANDLER			string = "GetActionHandler"
+	GET_ACTION_HANDLER string = "GetActionHandler"
 )
 
-type CallHandlers interface {}
+type CallHandlers interface{}
 
 /****************************************************************************************
  *	Struct 	: CallbackRoutine
- * 
+ *
  * 	Purpose :   Object stores callback handlers.
  *				Using different struct to isolate callback methods from RequestHandler
  *
@@ -45,23 +45,19 @@ type CallbackRoutine struct {
  *  Purpose : Get handler struct by provided name
  *
  *	 Return : Reflect value
-*/
-func (callbackRoutine *CallbackRoutine) getHandler (methodName string) reflect.Value {
+ */
+func (callbackRoutine *CallbackRoutine) getHandler(methodName string) reflect.Value {
 	return (reflect.ValueOf(callbackRoutine.CallHandlers).MethodByName(methodName))
 }
 
-
-
-
 /****************************************************************************************
  *	Struct 	: RequestHandler
- * 
+ *
  * 	Purpose : Object handles the OCPP Message request
  *
 *****************************************************************************************/
 type RequestHandler struct {
-	APIhadlers 			CallbackRoutine
-
+	APIhadlers CallbackRoutine
 }
 
 /****************************************************************************************
@@ -73,7 +69,7 @@ type RequestHandler struct {
  *	  Input : callbackRoutines interface{} - routines to handle OCPP requests
  *
  *	Return : RequestHandler object
-*/
+ */
 func CentralSystemHandlerConstructor(callbackRoutines interface{}) RequestHandler {
 	rh := RequestHandler{}
 	rh.APIhadlers.CallHandlers = callbackRoutines
@@ -92,9 +88,9 @@ func CentralSystemHandlerConstructor(callbackRoutines interface{}) RequestHandle
  *	Return : string - response
  *			 error - if happened, nil otherwise
  *			 bool - true if needs to keep websocket open, false otherwise
-*/
+ */
 func (requestHandler *RequestHandler) callRequestHandler(data interface{}, handlerMethodName string) (string, error, bool) {
-	
+
 	methodCall := requestHandler.APIhadlers.getHandler(handlerMethodName)
 	if !methodCall.IsValid() {
 		return "", errors.New("Cannot find CallRequest handler"), true
@@ -126,7 +122,7 @@ func (requestHandler *RequestHandler) callRequestHandler(data interface{}, handl
  *	Return : string - response
  *			 error - if happened, nil otherwise
  *			 bool - true if needs to keep websocket open, false otherwise
-*/
+ */
 func (requestHandler *RequestHandler) callResponseHandler(data interface{}, handlerMethodName string) (string, error, bool) {
 
 	methodCall := requestHandler.APIhadlers.getHandler(handlerMethodName)
@@ -156,8 +152,8 @@ func (requestHandler *RequestHandler) callResponseHandler(data interface{}, hand
  *	  Input : uniqueID string - message uniqueID
  *
  *	 Return : string - Action name
-*/
-func (requestHandler *RequestHandler) getActionByUniqueID (uniqueID string) string {
+ */
+func (requestHandler *RequestHandler) getActionByUniqueID(uniqueID string) string {
 	methodCall := requestHandler.APIhadlers.getHandler(GET_ACTION_HANDLER)
 	if !methodCall.IsValid() {
 		return ""
@@ -178,9 +174,9 @@ func (requestHandler *RequestHandler) getActionByUniqueID (uniqueID string) stri
  *
  *   Return : int - message type
  *			  error when cannot unmarshal message, nil otherwise
- *			  
-*/
-func (requestHandler *RequestHandler) getMessageType (rawMessage string) (int, error) {
+ *
+ */
+func (requestHandler *RequestHandler) getMessageType(rawMessage string) (int, error) {
 	var typeID int
 	parametersArray := []interface{}{&typeID}
 	if err := json.Unmarshal([]byte(rawMessage), &parametersArray); err != nil {
@@ -201,7 +197,7 @@ func (requestHandler *RequestHandler) getMessageType (rawMessage string) (int, e
  *   Return : string - response
  *			  error - if happened, nil otherwise
  *			  bool - true if needs to keep websocket open, false otherwise
-*/
+ */
 func (requestHandler *RequestHandler) HandleIncomeMessage(rawMessage string) (string, error, bool) {
 
 	// First check for income message
@@ -222,14 +218,14 @@ func (requestHandler *RequestHandler) HandleIncomeMessage(rawMessage string) (st
 
 		return requestHandler.callRequestHandler(
 			callMessageObj,
-			callMessageObj.Action + REQUEST_TYPE_HANDLER)
+			callMessageObj.Action+REQUEST_TYPE_HANDLER)
 	}
 
 	// Handle Call Result message
 	if messageType == int(messages.MESSAGE_TYPE_CALL_RESULT) {
 		// Create CallResultMessage obj from raw message
 		callResultObj := messages.CallResultMessageCreator(rawMessage)
-		
+
 		// To call correct CallResult handler we need action.
 		// Action is not exist in CallResult message.
 		// We are getting it from sent messages queue
@@ -238,11 +234,11 @@ func (requestHandler *RequestHandler) HandleIncomeMessage(rawMessage string) (st
 		// Get Action from the queue by uniqueID, as call result has not included one
 		return requestHandler.callResponseHandler(
 			callResultObj,
-			action + RESPONSE_TYPE_HANDLER)
+			action+RESPONSE_TYPE_HANDLER)
 	}
 
 	// Handle Call Error message
-	if messageType ==int(messages.MESSAGE_TYPE_CALL_ERROR) {
+	if messageType == int(messages.MESSAGE_TYPE_CALL_ERROR) {
 		// Create CallErrorMessage obj from raw message
 		callErrorObj := messages.CallErrorMessageCreator(rawMessage)
 		return requestHandler.callResponseHandler(
@@ -252,8 +248,3 @@ func (requestHandler *RequestHandler) HandleIncomeMessage(rawMessage string) (st
 
 	return "", errors.New(fmt.Sprintf("Handler for Type Message '%v' is not found", messageType)), true
 }
-
-
-
-
-

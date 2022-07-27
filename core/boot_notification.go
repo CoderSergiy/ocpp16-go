@@ -16,20 +16,20 @@ const (
 	RegistrationStatusPending  RegistrationStatus = "Pending"
 	RegistrationStatusRejected RegistrationStatus = "Rejected"
 
-	ACTION_BOOTNOTIFICATION		string = "BootNotification"
+	ACTION_BOOTNOTIFICATION string = "BootNotification"
 )
 
 /****************************************************************************************
  *	Struct 	: BootNotificationResponse
- * 
+ *
  * 	Purpose :   Object stores callback handlers.
  *				Using different struct to isolate callback methods from RequestHandler
  *
 *****************************************************************************************/
 type BootNotificationResponse struct {
-	CurrentTime 		string				//`json:"currentTime"`
-	HeartbeatInterval   int                	//`json:"heartbeatInterval"`
-	Status      		RegistrationStatus	//`json:"status"`
+	CurrentTime       string             //`json:"currentTime"`
+	HeartbeatInterval int                //`json:"heartbeatInterval"`
+	Status            RegistrationStatus //`json:"status"`
 }
 
 /****************************************************************************************
@@ -40,9 +40,9 @@ type BootNotificationResponse struct {
  *
  *	  Input : Nothing
  *
- *	 Return : map[string]interface{} - map of the 
-*/
-func (bootNotificationResponse *BootNotificationResponse) GetPayload () map[string]interface{} {
+ *	 Return : map[string]interface{} - map of the
+ */
+func (bootNotificationResponse *BootNotificationResponse) GetPayload() map[string]interface{} {
 
 	payload := make(map[string]interface{})
 	payload["status"] = string(bootNotificationResponse.Status)

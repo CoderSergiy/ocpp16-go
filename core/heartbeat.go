@@ -14,17 +14,17 @@ import (
 )
 
 const (
-	ACTION_HEARTBEAT		string = "Heartbeat"
+	ACTION_HEARTBEAT string = "Heartbeat"
 )
 
 /****************************************************************************************
  *	Struct 	: HeartBeatResponse
- * 
+ *
  * 	Purpose : Structure to work with HeartBeat response
  *
 *****************************************************************************************/
 type HeartBeatResponse struct {
-	CurrentTime	string	//`json:"currentTime"`
+	CurrentTime string //`json:"currentTime"`
 }
 
 /****************************************************************************************
@@ -36,8 +36,8 @@ type HeartBeatResponse struct {
  *	  Input : Nothing
  *
  *	 Return : Nothing
-*/
-func (heartBeatResponse *HeartBeatResponse) Init () {
+ */
+func (heartBeatResponse *HeartBeatResponse) Init() {
 	heartBeatResponse.CurrentTime = time.Now().Format("2006-01-02 15:04:05.000")
 }
 
@@ -49,9 +49,9 @@ func (heartBeatResponse *HeartBeatResponse) Init () {
  *
  *	  Input : Nothing
  *
- *	 Return : map[string]interface{} - map of the 
-*/
-func (heartBeatResponse *HeartBeatResponse) GetPayload () map[string]interface{} {
+ *	 Return : map[string]interface{} - map of the
+ */
+func (heartBeatResponse *HeartBeatResponse) GetPayload() map[string]interface{} {
 
 	payload := make(map[string]interface{})
 	payload["currentTime"] = heartBeatResponse.CurrentTime
