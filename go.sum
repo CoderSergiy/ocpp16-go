@@ -1,5 +1,7 @@
 github.com/CoderSergiy/golib v0.0.0-20220711214202-a0a68e9e1b53 h1:AXYWrsLT8rEMpibReifL3L3vab8Oa8d8lnFVBiniDPA=
 github.com/CoderSergiy/golib v0.0.0-20220711214202-a0a68e9e1b53/go.mod h1:qhmTVQo3dxUzid3+GRoaeHgEVllVSkWuYtlj9/q85lw=
+github.com/CoderSergiy/golib v0.1.0 h1:GcK+yqCpm2M73gUbgiZuP+6idB4cEzMQPwKtCFPXt9I=
+github.com/CoderSergiy/golib v0.1.0/go.mod h1:qhmTVQo3dxUzid3+GRoaeHgEVllVSkWuYtlj9/q85lw=
 github.com/gorilla/websocket v1.5.0 h1:PPwGk2jz7EePpoHN/+ClbZu8SPxiqlu12wZP/3sWmnc=
 github.com/gorilla/websocket v1.5.0/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/julienschmidt/httprouter v1.3.0 h1:U0609e9tgbseu3rBINet9P48AI/D3oJs4dN7jwJOQ1U=

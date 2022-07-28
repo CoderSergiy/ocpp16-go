@@ -53,7 +53,7 @@ deps:
 	$(GOGET) github.com/julienschmidt/httprouter
 	$(GOGET) github.com/gorilla/websocket
 	$(GOGET) github.com/CoderSergiy/golib/logging
-	$(GOGET) github.com/CoderSergiy/golib/timerlib
+	$(GOGET) github.com/CoderSergiy/golib/timelib
 	$(GOGET) github.com/CoderSergiy/golib/tools
 
 fmts:

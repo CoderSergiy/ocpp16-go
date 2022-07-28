@@ -11,6 +11,7 @@ package core
 
 import (
 	"fmt"
+	"github.com/CoderSergiy/golib/tools"
 	"github.com/CoderSergiy/ocpp16-go/messages"
 	"testing"
 	"time"
@@ -26,7 +27,11 @@ import (
  */
 func TestBootNotificationResponse(t *testing.T) {
 
-	uniqueID := "jnfow234-345mkregm"
+	uniqueID, generatorErr := tools.GenerateRandomStringURLSafe(32)
+	if generatorErr != nil {
+		t.Error(fmt.Printf("Error when generating reference '%v'", generatorErr))
+		return
+	}
 
 	//Create payload
 	bootNotificationRespPayload := BootNotificationResponsePayload{
