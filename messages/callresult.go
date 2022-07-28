@@ -45,7 +45,7 @@ func CallResultMessageConstructor() CallResultMessage {
 
 /****************************************************************************************
  *
- * Function : CallResultMessageCreator (Constructor)
+ * Function : CreateCallResultMessage (Constructor)
  *
  *  Purpose : Creates a new instance of the CallResultMessage from raw message
  *
@@ -54,7 +54,7 @@ func CallResultMessageConstructor() CallResultMessage {
  *
  *	 Return : CallResultMessage
  */
-func CallResultMessageWithParam(uniqueID string, payload map[string]interface{}) CallResultMessage {
+func CreateCallResultMessage(uniqueID string, payload map[string]interface{}) CallResultMessage {
 	callResultObj := CallResultMessage{}
 	callResultObj.UniqueID = uniqueID
 	callResultObj.Payload = payload

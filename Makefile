@@ -66,9 +66,12 @@ build:
 	$(GOBUILD) -o $(BINARY_FOLDER)/server -v ./server.go
 
 depsupdate:
-	go get -v -t ./...
+	$(GOGET) -v -t ./...
 
-buildall: depsupdate fmts build
+test:
+	@CGO_ENABLED=0 $(GOTEST) -v ./...
+
+buildall: depsupdate fmts test build
 
 # Command using Docker container
 

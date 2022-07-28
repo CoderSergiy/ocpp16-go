@@ -71,14 +71,13 @@ func CreateCallMessageCreator(rawMessage string) CallMessage {
 
 /****************************************************************************************
  *
- * Function : CallMessage::createCallMessage (Constructor)
+ * Function : CallMessage::CreateCallMessageWithParam (Constructor)
  *
- *  Purpose : Creates a new instance of the CallMessage object
+ *  Purpose : Creates a new instance of the CallMessage object with provided parameters
  *
- *	Return : nil is cannot unmarshal message, otherwise CallMessage object
+ *	 Return : CallMessage object
  */
-/*
-func CreateCallMessageConstructor (uniqueID string, action string, payload map[string]interface{}) CallMessage {
+func CreateCallMessageWithParam(uniqueID string, action string, payload map[string]interface{}) CallMessage {
 	callMessageObj := CallMessage{}
 	callMessageObj.UniqueID = uniqueID
 	callMessageObj.Action = action
@@ -86,7 +85,7 @@ func CreateCallMessageConstructor (uniqueID string, action string, payload map[s
 
 	return callMessageObj
 }
-*/
+
 /****************************************************************************************
  *
  * Function : CallMessage::init
@@ -167,8 +166,8 @@ func (callMessage *CallMessage) unpackMessage(rawMessage string) error {
  *
  *  Purpose : Convert CallMessage struct to string  message
  *
- *	Return : string
- *			 error if happened, nil otherwise
+ *	 Return : string
+ *			  error if happened, nil otherwise
  */
 func (callMessage *CallMessage) ToString() (string, error) {
 	messageType := int(MESSAGE_TYPE_CALL)

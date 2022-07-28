@@ -2,7 +2,6 @@ ocpp1.6-go
 =================
 ![Project status](https://img.shields.io/badge/version-0.1.1-green.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/CoderSergiy/ocpp16-go)](https://goreportcard.com/report/github.com/CoderSergiy/ocpp16-go)
-[![Coverage Status](https://coveralls.io/repos/github/CoderSergiy/ocpp16-go/badge.svg?branch=main)](https://coveralls.io/github/CoderSergiy/ocpp16-go?branch=main)
 ![License](https://img.shields.io/dub/l/vibe-d.svg)
 
 Open Charge Point Protocol (OCPP) is a standard open protocol for communication between Charge Points and Central System and is designed to accommodate any type of charging technique. 

@@ -15,7 +15,6 @@ import (
 	"github.com/CoderSergiy/ocpp16-go/core"
 	"github.com/CoderSergiy/ocpp16-go/messages"
 	"net/http"
-	"time"
 )
 
 const (
@@ -190,19 +189,15 @@ func (cs *OCPPHandlers) BootNotificationRequestHandler(callMessage messages.Call
 	if cs.Charger.AuthConnection {
 		status = core.RegistrationStatusAccepted
 	}
-	//Create payload
-	bootNotificationResp := core.BootNotificationResponse{
-		Status:            status,
-		HeartbeatInterval: 300,
-		CurrentTime:       time.Now().Format("2006-01-02 15:04:05.000"),
-	}
+	// Create default payload with pointed status
+	bootNotificationRespPayload := core.CreateBootNotificationResponsePayload(status)
 	// Create CallResult message
-	callMessageResponse := messages.CallResultMessageWithParam(
+	bootNotificationResp := messages.CreateCallResultMessage(
 		callMessage.UniqueID,
-		bootNotificationResp.GetPayload(),
+		bootNotificationRespPayload.GetPayload(),
 	)
 
-	return cs.finaliseReqHandler(callMessage, &callMessageResponse, WEBSOCKET_KEEP_OPEN)
+	return cs.finaliseReqHandler(callMessage, &bootNotificationResp, WEBSOCKET_KEEP_OPEN)
 }
 
 /****************************************************************************************
@@ -255,7 +250,7 @@ func (cs *OCPPHandlers) HeartbeatRequestHandler(callMessage messages.CallMessage
 	heartBeatResponse.Init()
 
 	// Create CallResultMessage
-	callMessageResponse := messages.CallResultMessageWithParam(
+	callMessageResponse := messages.CreateCallResultMessage(
 		callMessage.UniqueID,
 		heartBeatResponse.GetPayload(),
 	)

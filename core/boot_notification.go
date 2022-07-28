@@ -9,6 +9,10 @@
 
 package core
 
+import (
+	"time"
+)
+
 type RegistrationStatus string
 
 const (
@@ -20,35 +24,72 @@ const (
 )
 
 /****************************************************************************************
- *	Struct 	: BootNotificationResponse
+ *	Struct 	: BootNotificationResponsePayload
  *
  * 	Purpose :   Object stores callback handlers.
  *				Using different struct to isolate callback methods from RequestHandler
  *
 *****************************************************************************************/
-type BootNotificationResponse struct {
-	CurrentTime       string             //`json:"currentTime"`
-	HeartbeatInterval int                //`json:"heartbeatInterval"`
-	Status            RegistrationStatus //`json:"status"`
+type BootNotificationResponsePayload struct {
+	currentTime       string             //`json:"currentTime"`
+	heartbeatInterval int                //`json:"heartbeatInterval"`
+	status            RegistrationStatus //`json:"status"`
 }
 
 /****************************************************************************************
  *
- * Function : bootNotificationResponse::GetPayload
+ * Function : CreateBootNotificationResponsePayload (Constructor)
  *
- *  Purpose : Generate payload from BootNotificationResponse struct
+ *  Purpose : Creates a new instance of the BootNotificationResponsePayload object with default values
+ *
+ *    Input : status RegistrationStatus - new status
+ *
+ *	 Return : BootNotificationResponsePayload object
+ */
+func CreateBootNotificationResponsePayload(status RegistrationStatus) BootNotificationResponsePayload {
+	bootNotificationRespPayload := BootNotificationResponsePayload{}
+
+	bootNotificationRespPayload.status = status
+	bootNotificationRespPayload.heartbeatInterval = 300
+	bootNotificationRespPayload.currentTime = time.Now().Format("2006-01-02 15:04:05.000")
+
+	return bootNotificationRespPayload
+}
+
+/****************************************************************************************
+ *
+ * Function : BootNotificationResponsePayload::GetPayload
+ *
+ *  Purpose : Generate payload from BootNotificationResponsePayload struct
  *
  *	  Input : Nothing
  *
  *	 Return : map[string]interface{} - map of the
  */
-func (bootNotificationResponse *BootNotificationResponse) GetPayload() map[string]interface{} {
+func (bootNotificationResPayload *BootNotificationResponsePayload) GetPayload() map[string]interface{} {
 
 	payload := make(map[string]interface{})
-	payload["status"] = string(bootNotificationResponse.Status)
-	payload["currentTime"] = bootNotificationResponse.CurrentTime
-	payload["heartbeatInterval"] = bootNotificationResponse.HeartbeatInterval
+	payload["status"] = string(bootNotificationResPayload.status)
+	payload["currentTime"] = bootNotificationResPayload.currentTime
+	payload["heartbeatInterval"] = bootNotificationResPayload.heartbeatInterval
 
 	return payload
+}
 
+/****************************************************************************************
+ *	Struct 	: BootNotificationRequestPayload
+ *
+ * 	Purpose :   Object stores callback handlers.
+ *				Using different struct to isolate callback methods from RequestHandler
+ *
+*****************************************************************************************/
+type BootNotificationRequestPayload struct {
+	chargeBoxSerialNumber   string //`json:"chargeBoxSerialNumber"`
+	chargePointModel        string //`json:"chargePointModel"`
+	chargePointSerialNumber string //`json:"chargePointSerialNumber"`
+	chargePointVendor       string //`json:"chargePointVendor"`
+	firmwareVersion         string //`json:"firmwareVersion"`
+	iccid                   string //`json:"iccid"`
+	imsi                    string //`json:"imsi"`
+	meterSerialNumber       string //`json:"meterSerialNumber"`
 }
