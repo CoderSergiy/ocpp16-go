@@ -11,8 +11,8 @@ package core
 
 import (
 	"fmt"
-	"github.com/CoderSergiy/golib/tools"
 	"github.com/CoderSergiy/ocpp16-go/messages"
+	"github.com/google/uuid"
 	"testing"
 	"time"
 )
@@ -27,11 +27,7 @@ import (
  */
 func TestBootNotificationResponse(t *testing.T) {
 
-	uniqueID, generatorErr := tools.GenerateRandomStringURLSafe(32)
-	if generatorErr != nil {
-		t.Error(fmt.Printf("Error when generating reference '%v'", generatorErr))
-		return
-	}
+	uniqueID := uuid.New()
 
 	//Create payload
 	bootNotificationRespPayload := BootNotificationResponsePayload{
@@ -40,7 +36,7 @@ func TestBootNotificationResponse(t *testing.T) {
 		currentTime:       time.Now().Format("2006-01-02 15:04:05.000"),
 	}
 
-	bootNotificationResp := messages.CreateCallResultMessage(uniqueID, bootNotificationRespPayload.GetPayload())
+	bootNotificationResp := messages.CreateCallResultMessage(uniqueID.String(), bootNotificationRespPayload.GetPayload())
 
 	messageStr, err := bootNotificationResp.ToString()
 	if err != nil {

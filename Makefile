@@ -55,6 +55,7 @@ deps:
 	$(GOGET) github.com/CoderSergiy/golib/logging
 	$(GOGET) github.com/CoderSergiy/golib/timelib
 	$(GOGET) github.com/CoderSergiy/golib/tools
+	$(GOGET) github.com/google/uuid
 
 fmts:
 	$(GOFMT) -s -d ./core/*.go

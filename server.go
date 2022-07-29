@@ -17,6 +17,7 @@ import (
 	"github.com/CoderSergiy/ocpp16-go/core"
 	"github.com/CoderSergiy/ocpp16-go/example"
 	"github.com/CoderSergiy/ocpp16-go/messages"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
@@ -138,11 +139,12 @@ func triggerActionHandler(w http.ResponseWriter, r *http.Request, ps httprouter.
 		return
 	}
 
+	id := uuid.New()
 	// Generate Call request payload for the TriggerMessage
 	triggerMessagePayload := core.CreateTriggerMessageRequestPayload(core.TriggerMessageType(action), 0)
 	// Generate Call request to the charger
 	callMessageResponse := messages.CreateCallMessage(
-		"fefrregrgegerger",
+		id.String(),
 		action,
 		triggerMessagePayload.GetPayload(),
 	)
