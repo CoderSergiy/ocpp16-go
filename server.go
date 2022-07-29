@@ -16,6 +16,7 @@ import (
 	"github.com/CoderSergiy/golib/tools"
 	"github.com/CoderSergiy/ocpp16-go/core"
 	"github.com/CoderSergiy/ocpp16-go/example"
+	"github.com/CoderSergiy/ocpp16-go/messages"
 	"github.com/gorilla/websocket"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
@@ -87,6 +88,8 @@ func main() {
 
 	// Define http router
 	router := httprouter.New()
+	// Handle clients API requests
+	router.POST("/command/:chargerName/triggeraction/:action", triggerActionHandler)
 	// Set router for the ocpp V1.6 connection in the json format
 	router.GET("/ocppj/1.6/:chargerName", wsChargerHandler)
 	// Start server
@@ -95,9 +98,80 @@ func main() {
 
 /****************************************************************************************
  *
+ * Function : triggerActionHandler
+ *
+ *  Purpose : Handler clients request to generate triggerAction request to the charger
+ *
+ *    Input : w http.ResponseWriter - http response
+ *			  r *http.Request - http request object
+ *			  ps httprouter.Params - router parameter
+ *
+ *   Return : Nothing
+ */
+func triggerActionHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	tm := timelib.EventTimerConstructor()
+	log.Info_Log("Handle income TriggerAction request from Host '%v' and Path '%v'", r.URL.Host, r.URL.Path)
+
+	chargerName := ps.ByName("chargerName")
+	action := ps.ByName("action")
+	log.Info_Log("Charger name '%v' and action '%v'", chargerName, action)
+
+	if chargerName == "" || action == "" {
+		log.Error_Log("One of the parameters are empty charger '%v' action '%v'", chargerName, action)
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	// Get Charger from the Configs
+	chargerObj, err := ServerConfigs.GetChargerObj(chargerName)
+	if err != nil {
+		// There is no charger with specified name in the configs
+		log.Error_Log("Not allowed to connect for specified charger '%v' with error '%v'", chargerName, err)
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	// Sanitize the TriggerMessage type from the request
+	if !core.SanitizeTriggerMessageType(action) {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		log.Error_Log("TriggerMessage type '%v' is not supported", action)
+		return
+	}
+
+	// Generate Call request payload for the TriggerMessage
+	triggerMessagePayload := core.CreateTriggerMessageRequestPayload(core.TriggerMessageType(action), 0)
+	// Generate Call request to the charger
+	callMessageResponse := messages.CreateCallMessage(
+		"fefrregrgegerger",
+		action,
+		triggerMessagePayload.GetPayload(),
+	)
+
+	// Convert Call message to string
+	message, messageErr := callMessageResponse.ToString()
+	if messageErr != nil {
+		http.Error(w, string(example.CreateFailResponse("Internal Error")), http.StatusOK)
+		log.Error_Log("Error to generate callMessage: '%v'. Finished in '%v'", messageErr, tm.PrintTimerString())
+		return
+	}
+
+	log.Info_Log(message)
+	chargerObj.InboundIP = message
+
+	// Send response in json format
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(example.CreateSuccessResponse(callMessageResponse.UniqueID))
+
+	log.Info_Log("OCPPRequestHandler is finished in %v", tm.PrintTimerString())
+}
+
+/****************************************************************************************
+ *
  * Function : wsChargerHandler
  *
- *  Purpose : Handler
+ *  Purpose : Handler the requests from charger.
+ *			  Socket is upgrading to WebSocket further
  *
  *    Input : w http.ResponseWriter - http response
  *			  r *http.Request - http request object
@@ -107,7 +181,7 @@ func main() {
  */
 func wsChargerHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	tm := timelib.EventTimerConstructor()
-	log.Info_Log("Handle income request from Host '%v' and Path '%v'", r.URL.Host, r.URL.Path)
+	log.Info_Log("Handle income wsCharger request from Host '%v' and Path '%v'", r.URL.Host, r.URL.Path)
 
 	chargerName := ps.ByName("chargerName")
 	log.Info_Log("HTTP is connected. Charger name '%v'", chargerName)

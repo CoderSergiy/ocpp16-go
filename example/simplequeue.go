@@ -301,3 +301,74 @@ func SetConfigsFromFile(fileName string) (Configs, error) {
 
 	return configs, nil
 }
+
+/****************************************************************************************
+ *	Struct 	: APIResponse
+ *
+ * 	Purpose : Object handles API response parameters
+ *
+*****************************************************************************************/
+type APIResponse struct {
+	Status      string `json:"status"`
+	Reference   string `json:"reference"`
+	Description string `json:"description"`
+}
+
+/****************************************************************************************
+ *
+ * Function : APIResponse::toBytes
+ *
+ *  Purpose : Convert APIResponse to json format
+ *
+ *	  Input : Nothing
+ *
+ *	 Return : []byte - json format of the APIResponse
+ */
+func (apiResponse *APIResponse) toBytes() []byte {
+	jsonResult, err := json.Marshal(apiResponse)
+	if err != nil {
+		return []byte("Internal Application Error")
+	}
+
+	return jsonResult
+}
+
+/****************************************************************************************
+ *
+ * Function : CreateSuccessResponse
+ *
+ *  Purpose : Create Successfull API response in json format
+ *
+ *	  Input : reference string - reference for the response
+ *
+ *	 Return : []byte - json format of the APIResponse
+ */
+func CreateSuccessResponse(reference string) []byte {
+	apiResponse := APIResponse{}
+
+	apiResponse.Status = "success"
+	apiResponse.Description = ""
+	apiResponse.Reference = reference
+
+	return apiResponse.toBytes()
+}
+
+/****************************************************************************************
+ *
+ * Function : CreateFailResponse
+ *
+ *  Purpose : Create Failed API response in json format
+ *
+ *	  Input : description string - description of the failed status
+ *
+ *	 Return : string - json format of the APIResponse
+ */
+func CreateFailResponse(description string) string {
+	apiResponse := APIResponse{}
+
+	apiResponse.Status = "fail"
+	apiResponse.Description = description
+	apiResponse.Reference = ""
+
+	return string(apiResponse.toBytes())
+}

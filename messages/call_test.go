@@ -73,7 +73,7 @@ func TestOutgoingMessage(t *testing.T) {
 	payload := make(map[string]interface{})
 
 	// Create CallResult message
-	callMessageResponse := CreateCallMessageWithParam(
+	callMessageResponse := CreateCallMessage(
 		"29591-56097986-1",
 		"BootNotification",
 		payload,

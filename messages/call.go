@@ -71,13 +71,13 @@ func CreateCallMessageCreator(rawMessage string) CallMessage {
 
 /****************************************************************************************
  *
- * Function : CallMessage::CreateCallMessageWithParam (Constructor)
+ * Function : CallMessage::CreateCallMessage (Constructor)
  *
  *  Purpose : Creates a new instance of the CallMessage object with provided parameters
  *
  *	 Return : CallMessage object
  */
-func CreateCallMessageWithParam(uniqueID string, action string, payload map[string]interface{}) CallMessage {
+func CreateCallMessage(uniqueID string, action string, payload map[string]interface{}) CallMessage {
 	callMessageObj := CallMessage{}
 	callMessageObj.UniqueID = uniqueID
 	callMessageObj.Action = action
