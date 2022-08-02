@@ -16,14 +16,12 @@
 package main
 
 import (
-	"encoding/json"
 	"github.com/CoderSergiy/golib/logging"
 	"github.com/CoderSergiy/golib/timelib"
 	"github.com/CoderSergiy/golib/tools"
 	"github.com/CoderSergiy/ocpp16-go/core"
 	"github.com/CoderSergiy/ocpp16-go/example"
 	"github.com/CoderSergiy/ocpp16-go/messages"
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
@@ -69,8 +67,9 @@ func main() {
 	// Define http router
 	router := httprouter.New()
 	// Handle clients API requests
-	router.GET("/message/:messageReference/status", messageStatusHandler)
-	router.POST("/command/:chargerName/triggeraction/:action", triggerActionHandler)
+	router.GET("/message/:messageReference/status", messageStatusAPIHandler)
+	router.GET("/charger/:chargerName/status", chargerStatusAPIHandler)
+	router.POST("/command/:chargerName/triggeraction/:action", triggerActionAPIHandler)
 	// Set router for the ocpp V1.6 connection in the json format
 	router.GET("/ocppj/1.6/:chargerName", wsChargerHandler)
 	// Start server
@@ -79,7 +78,7 @@ func main() {
 
 /****************************************************************************************
  *
- * Function : messageStatusHandler
+ * Function : messageStatusAPIHandler
  *
  *  Purpose : Handles client request to get message status
  *
@@ -89,45 +88,37 @@ func main() {
  *
  *   Return : Nothing
  */
-func messageStatusHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func messageStatusAPIHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	tm := timelib.EventTimerConstructor()
-	log.Info_Log("Handle income messageStatusHandler request from Host '%v' and Path '%v'", r.URL.Host, r.URL.Path)
-
-	reference := ps.ByName("messageReference")
-
-	if reference == "" {
-		log.Error_Log("Reference parameter is empty")
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
-	}
-
-	log.Info_Log("Reference is '%v'", reference)
-
-	message, success := MQueue.GetMessage(reference)
-	if !success {
-		http.Error(w, string(example.CreateFailResponse("Message is not exist")), http.StatusOK)
-		log.Error_Log("Message is not exists in the queue with uniqueID: '%v'. Finished in '%v'", reference, tm.PrintTimerString())
-		return
-	}
-
-	jsonResult, err := json.Marshal(message)
-	if err != nil {
-		http.Error(w, string(example.CreateFailResponse("Internal Application Error")), http.StatusOK)
-		log.Error_Log("Cannot marshal message '%v'. Finished in '%v'", reference, tm.PrintTimerString())
-		return
-	}
-
-	// Send response in json format
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonResult)
-
-	log.Info_Log("messageStatusHandler is finished in %v", tm.PrintTimerString())
+	log.Info_Log("Handle income messageStatusAPIHandler request from Host '%v' and Path '%v'", r.URL.Host, r.URL.Path)
+	// Get Message from queue
+	example.GetMessageStatusAPI(ps.ByName("messageReference"), &MQueue, &log, w)
+	log.Info_Log("messageStatusAPIHandler is finished in %v", tm.PrintTimerString())
 }
 
 /****************************************************************************************
  *
- * Function : triggerActionHandler
+ * Function : chargerStatusAPIHandler
+ *
+ *  Purpose : Handles client request to get message status
+ *
+ *    Input : w http.ResponseWriter - http response
+ *            r *http.Request - http request object
+ *            ps httprouter.Params - router parameter
+ *
+ *   Return : Nothing
+ */
+func chargerStatusAPIHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+	tm := timelib.EventTimerConstructor()
+	log.Info_Log("Handle income chargerStatusAPIHandler request from Host '%v' and Path '%v'", r.URL.Host, r.URL.Path)
+	// Get Message from queue
+	example.GetChargerStatusAPI(ps.ByName("chargerName"), &ServerConfigs, &log, w)
+	log.Info_Log("chargerStatusAPIHandler is finished in %v", tm.PrintTimerString())
+}
+
+/****************************************************************************************
+ *
+ * Function : triggerActionAPIHandler
  *
  *  Purpose : Handle clients request to generate triggerAction request to the charger
  *
@@ -137,74 +128,12 @@ func messageStatusHandler(w http.ResponseWriter, r *http.Request, ps httprouter.
  *
  *   Return : Nothing
  */
-func triggerActionHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func triggerActionAPIHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	tm := timelib.EventTimerConstructor()
-	log.Info_Log("Handle income TriggerAction request from Host '%v' and Path '%v'", r.URL.Host, r.URL.Path)
-
-	chargerName := ps.ByName("chargerName")
-	action := ps.ByName("action")
-
-	if chargerName == "" || action == "" {
-		log.Error_Log("One of the parameters are empty charger '%v' action '%v'", chargerName, action)
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
-	}
-
-	log.Info_Log("Charger name '%v' and action '%v'", chargerName, action)
-
-	// Get Charger from the Configs
-	chargerObj, err := ServerConfigs.GetChargerObj(chargerName)
-	if err != nil {
-		// There is no charger with specified name in the configs
-		log.Error_Log("Not allowed to connect for specified charger '%v' with error '%v'", chargerName, err)
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		return
-	}
-
-	// Sanitize the TriggerMessage type from the request
-	if !core.SanitizeTriggerMessageType(action) {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
-		log.Error_Log("TriggerMessage type '%v' is not supported", action)
-		return
-	}
-
-	id := uuid.New()
-	// Generate Call request payload for the TriggerMessage
-	triggerMessagePayload := core.CreateTriggerMessageRequestPayload(core.TriggerMessageType(action), 0)
-	// Generate Call request to the charger
-	callMessageRequest := messages.CreateCallMessage(
-		id.String(),
-		core.ACTION_TRIGGERMESSAGE,
-		triggerMessagePayload.GetPayload(),
-	)
-
-	// Convert Call message to string
-	callMessageString, messageErr := callMessageRequest.ToString()
-	if messageErr != nil {
-		http.Error(w, string(example.CreateFailResponse("Internal Error")), http.StatusOK)
-		log.Error_Log("Error to generate callMessage: '%v'. Finished in '%v'", messageErr, tm.PrintTimerString())
-		return
-	}
-
-	// Create message for the queue
-	queueMessage := example.Message{Action: action, Sent: callMessageString, Status: example.MESSAGE_TYPE_NEW, Received: ""}
-	// Add message to the queue
-	addingErr := MQueue.Add(callMessageRequest.UniqueID, queueMessage)
-	if addingErr != nil {
-		http.Error(w, string(example.CreateFailResponse("Internal Error")), http.StatusOK)
-		log.Error_Log("Error to add message to the queue: '%v'. Finished in '%v'", addingErr, tm.PrintTimerString())
-		return
-	}
-
-	log.Info_Log(callMessageString)
-	(*chargerObj).WriteChannel <- callMessageRequest.UniqueID
-
-	// Send response in json format
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(example.CreateSuccessResponse(callMessageRequest.UniqueID))
-
-	log.Info_Log("triggerActionHandler is finished in %v", tm.PrintTimerString())
+	log.Info_Log("Handle income TriggerActionAPI request from Host '%v' and Path '%v'", r.URL.Host, r.URL.Path)
+	// Call Trigger Action API
+	example.TriggerActionAPI(&ServerConfigs, &MQueue, &log, ps, w)
+	log.Info_Log("triggerActionAPIHandler is finished in %v", tm.PrintTimerString())
 }
 
 /****************************************************************************************
@@ -263,7 +192,7 @@ func wsChargerHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 	ocppHandlers.MQueue = &MQueue
 
 	// Store remote IP
-	(*chargerObj).InboundIP = r.RemoteAddr
+	chargerObj.InboundIP = r.RemoteAddr
 	// Set Charger's WebSocket flag as connected
 	(*chargerObj).WebSocketConnected = true
 	// Add charger details to ocppHandlers
