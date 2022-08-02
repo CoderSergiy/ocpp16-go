@@ -29,9 +29,9 @@ const (
  *
 *****************************************************************************************/
 type OCPPHandlers struct {
-	Charger Charger            // Charger struct which connected to the server
-	Log     logging.Log        // Pointer to the log
-	txQueue SimpleMessageQueue // For example queue will be here
+	Charger *Charger            // Charger struct which connected to the server
+	Log     logging.Log         // Pointer to the log
+	MQueue  *SimpleMessageQueue // For example queue will be here
 }
 
 /****************************************************************************************
@@ -46,22 +46,7 @@ type OCPPHandlers struct {
  */
 func OCPPHandlersConstructor() OCPPHandlers {
 	ocppHandlers := OCPPHandlers{}
-	ocppHandlers.init()
 	return ocppHandlers
-}
-
-/****************************************************************************************
- *
- * Function : OCPPHandlers::init
- *
- *  Purpose : Initiate variables of the OCPPHandlers structure
- *
- *	  Input : Nothing
- *
- *	 Return : Nothing
- */
-func (cs *OCPPHandlers) init() {
-	cs.txQueue.init() // Clear queues
 }
 
 /****************************************************************************************
@@ -87,6 +72,12 @@ func (cs *OCPPHandlers) finaliseReqHandler(callMessage messages.CallMessage, res
 		return "", err, socketStatus
 	}
 
+	// Update message's action and sending content in the queue
+	qMessage, _ := cs.MQueue.GetMessage(callMessage.UniqueID)
+	qMessage.Action = callMessage.Action
+	qMessage.Sent = messageStr
+	cs.MQueue.UpdateByUniqueID(callMessage.UniqueID, qMessage)
+
 	return messageStr, nil, socketStatus
 }
 
@@ -106,11 +97,11 @@ func (cs *OCPPHandlers) finaliseReqHandler(callMessage messages.CallMessage, res
  */
 func (cs *OCPPHandlers) finaliseRespHandler(uniqueID string, socketStatus bool) (error, bool) {
 
-	// Before end the handler delete message from txQueue
-	err := cs.txQueue.DeleteByUniqueID(uniqueID)
+	// Before end the handler delete message from MQueue
+	err := cs.MQueue.DeleteByUniqueID(uniqueID)
 
 	if err == nil {
-		cs.Log.Info_Log("%v", cs.txQueue.printStatus())
+		cs.Log.Info_Log("%v", cs.MQueue.printStatus())
 	}
 
 	return err, socketStatus
@@ -130,9 +121,7 @@ func (cs *OCPPHandlers) finaliseRespHandler(uniqueID string, socketStatus bool) 
 func (cs *OCPPHandlers) GetActionHandler(uniqueID string) string {
 
 	// Get action from tx queue by UniqueID
-	message, success := cs.txQueue.GetMessage(uniqueID)
-
-	if success {
+	if message, success := cs.MQueue.GetMessage(uniqueID); success {
 		// Message exists - return action
 		return message.Action
 	}
@@ -157,6 +146,10 @@ func (cs *OCPPHandlers) Authorisation(chargerName string, request *http.Request)
 
 	cs.Log.Info_Log("Auth request from URL '%s'", request.RequestURI)
 	cs.Log.Info_Log("Header is '%s'", request.Header["Authorisation"])
+
+	if cs.Charger == nil {
+		cs.Log.Error_Log("Charger struct is nil")
+	}
 
 	cs.Charger.AuthConnection = true
 	cs.Log.Info_Log("[%v] Authorisation is '%v'", chargerName, cs.Charger.AuthConnection)

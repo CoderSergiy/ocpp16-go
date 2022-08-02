@@ -9,6 +9,10 @@
 
 package messages
 
+import (
+	"encoding/json"
+)
+
 type MessageType int
 
 /****************************************************************************************
@@ -20,4 +24,28 @@ type MessageType int
 type Message interface {
 	getMessageType() MessageType
 	ToString() (string, error)
+}
+
+/****************************************************************************************
+ *
+ * Function : GetMessageTypeFromRaw
+ *
+ *  Purpose : Get message type and uniqueid from raw OCPP message
+ *
+ *    Input : rawMessage string - raw OCPP message
+ *
+ *   Return : string - uniqueID
+ *            int - message type
+ *            error when cannot unmarshal message, nil otherwise
+ *
+ */
+func GetMessageTypeFromRaw(rawMessage string) (int, string, error) {
+	var uniqueID string
+	var typeID int
+	parametersArray := []interface{}{&typeID, &uniqueID}
+	if err := json.Unmarshal([]byte(rawMessage), &parametersArray); err != nil {
+		return 0, "", err
+	}
+
+	return typeID, uniqueID, nil
 }

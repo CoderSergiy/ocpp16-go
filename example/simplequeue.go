@@ -21,9 +21,11 @@ import (
 type QueueMessageType int
 
 const (
-	MESSAGE_TYPE_SEND     QueueMessageType = 1
-	MESSAGE_TYPE_SENT     QueueMessageType = 2
-	MESSAGE_TYPE_RECEIVED QueueMessageType = 3
+	MESSAGE_TYPE_NEW       QueueMessageType = 1
+	MESSAGE_TYPE_SENT      QueueMessageType = 2
+	MESSAGE_TYPE_RECEIVED  QueueMessageType = 3
+	MESSAGE_TYPE_COMPLETED QueueMessageType = 4
+	MESSAGE_TYPE_ERROR     QueueMessageType = 5
 )
 
 /****************************************************************************************
@@ -33,8 +35,10 @@ const (
  *
 *****************************************************************************************/
 type Message struct {
-	Action  string // Action of the message
-	Content string // Message content
+	Action   string // Action of the message
+	Received string // Message content
+	Status   QueueMessageType
+	Sent     string
 }
 
 /****************************************************************************************
@@ -47,6 +51,22 @@ type SimpleMessageQueue struct {
 	MaxSize      int
 	MessageQueue map[string]Message
 	queueMux     sync.Mutex
+}
+
+/****************************************************************************************
+ *
+ * Function : SimpleMessageQueue (Constructor)
+ *
+ *  Purpose : Creates a new instance of the SimpleMessageQueue
+ *
+ *	  Input : Nothing
+ *
+ *	Return : SimpleMessageQueue object
+ */
+func SimpleMessageQueueConstructor() SimpleMessageQueue {
+	messageQueue := SimpleMessageQueue{}
+	messageQueue.init()
+	return messageQueue
 }
 
 /****************************************************************************************
@@ -120,6 +140,33 @@ func (queue *SimpleMessageQueue) DeleteByUniqueID(uniqueID string) error {
 
 /****************************************************************************************
  *
+ * Function : SimpleMessageQueue::UpdateByUniqueID
+ *
+ *  Purpose : Update message in the queue by unique id
+ *
+ *    Input : uniqueID string - id of the message
+ *            message Message - message obj to update in the queue
+ *
+ *   Return : error - if happened, nil otherwise
+ *
+ */
+func (queue *SimpleMessageQueue) UpdateByUniqueID(uniqueID string, message Message) error {
+	// Lock the queue before any changes
+	queue.queueMux.Lock()
+	defer queue.queueMux.Unlock()
+
+	// If unique id exists in the queue - update it
+	if _, isKeyPresent := queue.MessageQueue[uniqueID]; isKeyPresent {
+		queue.MessageQueue[uniqueID] = message
+		return nil
+	}
+
+	// Otherwise return an error
+	return errors.New("UpdateByUniqueID. Message with pointed uniqueID is not exists")
+}
+
+/****************************************************************************************
+ *
  * Function : SimpleMessageQueue::GetMessage
  *
  *  Purpose : Get message from the queue by unique id
@@ -167,6 +214,7 @@ type Charger struct {
 	AuthConnection     bool
 	WebSocketConnected bool
 	InboundIP          string
+	WriteChannel       chan string
 }
 
 /****************************************************************************************
@@ -222,15 +270,15 @@ func (conf *Configs) init() {
  *	 Return : Charger - charger object
  * 			  error - error if happened
  */
-func (conf *Configs) GetChargerObj(chargerName string) (Charger, error) {
+func (conf *Configs) GetChargerObj(chargerName string) (*Charger, error) {
 
 	if charger, isKeyPresent := conf.Chargers[chargerName]; isKeyPresent {
 		// Requested charger is exists in the configs
-		return charger, nil
+		return &charger, nil
 	}
 
 	// Charger details is not exists in the configs
-	return Charger{}, errors.New("Charger is not exists in configs")
+	return nil, errors.New("Charger is not exists in configs")
 
 }
 
@@ -295,6 +343,8 @@ func SetConfigsFromFile(fileName string) (Configs, error) {
 		chargerConf := Charger{}
 		chargerConf.AuthToken = charger.Authorization
 		chargerConf.HeartBeatInterval = charger.HeartBeatInterval
+		chargerConf.WebSocketConnected = false
+		chargerConf.WriteChannel = make(chan string)
 
 		configs.Chargers[charger.Name] = chargerConf
 	}

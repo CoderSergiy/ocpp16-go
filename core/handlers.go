@@ -10,7 +10,6 @@
 package core
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/CoderSergiy/ocpp16-go/messages"
@@ -168,26 +167,6 @@ func (requestHandler *RequestHandler) getActionByUniqueID(uniqueID string) strin
 
 /****************************************************************************************
  *
- * Function : RequestHandler::getMessageType
- *
- *  Purpose : Get message type from raw OCPP message
- *
- *   Return : int - message type
- *			  error when cannot unmarshal message, nil otherwise
- *
- */
-func (requestHandler *RequestHandler) getMessageType(rawMessage string) (int, error) {
-	var typeID int
-	parametersArray := []interface{}{&typeID}
-	if err := json.Unmarshal([]byte(rawMessage), &parametersArray); err != nil {
-		return 0, err
-	}
-
-	return typeID, nil
-}
-
-/****************************************************************************************
- *
  * Function : RequestHandler::HandleIncomeMessage
  *
  *  Purpose : Parse, unmarshal and validate request body from request
@@ -206,7 +185,7 @@ func (requestHandler *RequestHandler) HandleIncomeMessage(rawMessage string) (st
 	}
 
 	// Get message type from the raw text
-	messageType, errMessageType := requestHandler.getMessageType(rawMessage)
+	messageType, _, errMessageType := messages.GetMessageTypeFromRaw(rawMessage)
 	if errMessageType != nil {
 		return "", errMessageType, true
 	}
