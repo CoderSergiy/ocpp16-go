@@ -20,7 +20,7 @@ docker build -t ocpp16:latest -f Dockerfile .
 docker run --rm --name ocpp16-example -p "9033:8080" ocpp16:latest
 ```
 
-#### Endpoint
+#### Endpoint for the chargers
 ```bash
 ws://localhost:9033/ocppj/1.6/{chargerName}
 ```
@@ -69,24 +69,24 @@ The error handler named "OCPPErrorHandler".
 Charger needs to be add to the connfigs.json
 Example:
 ```bash
-curl --location --request GET 'http://localhost:9033/charger/{chargerName}/status'
+curl --request GET 'http://localhost:9033/charger/{chargerName}/status'
 ```
 
 ### Get status of the message
 All messages are using unique ID. Please, use it to inquire status from the server
 Example:
 ```bash
-curl --location --request GET 'http://localhost:9033/message/{messageUniqueID}/status'
+curl --request GET 'http://localhost:9033/message/{messageUniqueID}/status'
 ```
 
-### Inject the TriggerAction to server (from CS to CP)
+### Initiate the TriggerAction by server (from CS to CP)
 API to inject message for the charger, to make possible for Central System trigger Charge Point-initiated message.
-In response for successful created message server will returns 'uniqueid' which you can use to obtain status using Get MEssage Satatus API.
+In response for successful created message server will returns 'uniqueid' which you can use to obtain status using Get Message Satatus API.
 Example:
 ```bash
-curl --location --request POST 'http://localhost:9033/command/{chargerName}/triggeraction/{action}'
+curl --request POST 'http://localhost:9033/command/{chargerName}/triggeraction/{action}'
 ```
-Permitted value for the 'action' parameter, regarding OCPP document you can find in the list below:
+Permitted values for the 'action' parameter, regarding OCPP document you can find in the list below:
 * BootNotification
 * DiagnosticsStatusNotification
 * FirmwareStatusNotification
