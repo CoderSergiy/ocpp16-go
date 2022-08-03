@@ -14,7 +14,7 @@ Code in branch is based on JSON type communication (OCPP-J) as SOAP will no long
 
 Planned milestones and features:
 
-- [x] OCPP 1.6 repo structure
+- [x] OCPP 1.6 messages
 - [x] Example of OCPP implementation as Central Sysytem (3 actions)
 - [ ] OCPP 1.6 Core
 - [ ] Add test cases for library

@@ -10,6 +10,7 @@ Example shows implementation ocppj version 1.6 for central system.
 - callbacks.go - Includes handlers for each OCPP request (Implementation DB logic)
 - configs.json - File to specify list of chargers for the demo in JSON format
 - simplequeue.go - Simple messages queue and charger objects for the demo only
+- api.go - Handlers for the client API requests
 - README.md - this file
 
 #### Docker
@@ -19,6 +20,10 @@ docker build -t ocpp16:latest -f Dockerfile .
 docker run --rm --name ocpp16-example -p "9033:8080" ocpp16:latest
 ```
 
+#### Endpoint
+```bash
+ws://localhost:9033/ocppj/1.6/{chargerName}
+```
 
 ## Central System Example
 
@@ -58,3 +63,33 @@ Name of the methods for the call requests has to in in the format: action + "Req
 For the responses handlers have to be in the formar: action + "ResponseHandler", as example "AuthorizeResponseHandler". 
 
 The error handler named "OCPPErrorHandler".
+
+## API to work with server
+### Get status of the charger
+Charger needs to be add to the connfigs.json
+Example:
+```bash
+curl --location --request GET 'http://localhost:9033/charger/{chargerName}/status'
+```
+
+### Get status of the message
+All messages are using unique ID. Please, use it to inquire status from the server
+Example:
+```bash
+curl --location --request GET 'http://localhost:9033/message/{messageUniqueID}/status'
+```
+
+### Inject the TriggerAction to server (from CS to CP)
+API to inject message for the charger, to make possible for Central System trigger Charge Point-initiated message.
+In response for successful created message server will returns 'uniqueid' which you can use to obtain status using Get MEssage Satatus API.
+Example:
+```bash
+curl --location --request POST 'http://localhost:9033/command/{chargerName}/triggeraction/{action}'
+```
+Permitted value for the 'action' parameter, regarding OCPP document you can find in the list below:
+* BootNotification
+* DiagnosticsStatusNotification
+* FirmwareStatusNotification
+* Heartbeat
+* MeterValues
+* StatusNotification

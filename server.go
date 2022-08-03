@@ -194,12 +194,12 @@ func wsChargerHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 	// Store remote IP
 	chargerObj.InboundIP = r.RemoteAddr
 	// Set Charger's WebSocket flag as connected
-	(*chargerObj).WebSocketConnected = true
+	chargerObj.WebSocketConnected = true
 	// Add charger details to ocppHandlers
 	ocppHandlers.Charger = chargerObj
 
 	// Authorise request
-	(*chargerObj).AuthConnection = false
+	chargerObj.AuthConnection = false
 	ocppHandlers.Authorisation(chargerName, r)
 	// Socket activity flag
 	isSocketActive := true
@@ -236,6 +236,11 @@ func logReaderRD(conn *websocket.Conn, chargerName string, isSocketActive *bool,
 	centralSystem := core.CentralSystemHandlerConstructor(ocppHandlers)
 
 	for {
+
+		if *isSocketActive == false {
+			break
+		}
+
 		// Read websocket message
 		_, rawMessage, readingSocketError := conn.ReadMessage()
 
@@ -243,7 +248,7 @@ func logReaderRD(conn *websocket.Conn, chargerName string, isSocketActive *bool,
 			chargerLog.Error_Log("[%v] Client is disconnected with error: '%v'", tools.GetGoID(), readingSocketError)
 			*isSocketActive = false
 			(*chargerObj).WebSocketConnected = false
-			//gs.WriteChannel <- "stop"
+			chargerObj.WriteChannel <- "wakeup"
 			break
 		}
 
@@ -274,8 +279,10 @@ func logReaderRD(conn *websocket.Conn, chargerName string, isSocketActive *bool,
 		if response != "" {
 			(*chargerObj).WriteChannel <- uniqueID
 		}
-
 	}
+
+	// Clear Charger parameters
+	chargerObj.Disconnected()
 
 	chargerLog.Info_Log("[%v] Reading goroutine is finished", tools.GetGoID())
 }
@@ -326,10 +333,9 @@ func logReaderWR(conn *websocket.Conn, chargerName string, isSocketActive *bool,
 
 		chargerLog.Info_Log("Sent to charger '%v'", qMessage.Sent)
 	}
-	// At this point webSocket needs to be closed
-	// Clear memory allocated for goroutineSet
-	//close((*chargerObj).WriteChannel)
-	//gs = nil
+
+	// Clear Charger parameters
+	chargerObj.Disconnected()
 
 	chargerLog.Info_Log("[%v] Writing goroutine is finished", tools.GetGoID())
 }

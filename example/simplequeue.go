@@ -249,7 +249,23 @@ func (charger *Charger) init() {
 	charger.AuthConnection = false
 	charger.WebSocketConnected = false
 	charger.InboundIP = ""
-	charger.WriteChannel = make(chan string)
+	charger.WriteChannel = make(chan string, 10) // Create channel with buffer 10 messages
+}
+
+/****************************************************************************************
+ *
+ * Function : Charger::Disconnected
+ *
+ *  Purpose : Clear Charger parameters when disconnected from socket
+ *
+ *    Input : Nothing
+ *
+ *   Return : Nothing
+ */
+func (charger *Charger) Disconnected() {
+	charger.AuthConnection = false
+	charger.WebSocketConnected = false
+	charger.InboundIP = ""
 }
 
 /****************************************************************************************
@@ -259,8 +275,8 @@ func (charger *Charger) init() {
  *
 *****************************************************************************************/
 type Configs struct {
-	Chargers     map[string]Charger `json:"Chargers"`
-	MaxQueueSize int                `json:"MaxQueueSize"`
+	Chargers     map[string]*Charger `json:"Chargers"`
+	MaxQueueSize int                 `json:"MaxQueueSize"`
 }
 
 /****************************************************************************************
@@ -290,7 +306,7 @@ func ServerConfigsConstructor() Configs {
  *	 Return : Nothing
  */
 func (conf *Configs) init() {
-	conf.Chargers = make(map[string]Charger)
+	conf.Chargers = make(map[string]*Charger)
 	conf.MaxQueueSize = 10
 }
 
@@ -309,7 +325,7 @@ func (conf *Configs) GetChargerObj(chargerName string) (*Charger, error) {
 
 	if charger, isKeyPresent := conf.Chargers[chargerName]; isKeyPresent {
 		// Requested charger is exists in the configs
-		return &charger, nil
+		return charger, nil
 	}
 
 	// Charger details is not exists in the configs
@@ -379,7 +395,7 @@ func SetConfigsFromFile(fileName string) (Configs, error) {
 		chargerConf.AuthToken = charger.Authorization
 		chargerConf.HeartBeatInterval = charger.HeartBeatInterval
 
-		configs.Chargers[charger.Name] = chargerConf
+		configs.Chargers[charger.Name] = &chargerConf
 	}
 
 	return configs, nil
