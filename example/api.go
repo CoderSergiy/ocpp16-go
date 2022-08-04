@@ -45,7 +45,7 @@ func GetChargerStatusAPI(chargerName string, serverConfigs *Configs, log *loggin
 		return
 	}
 
-	log.Info_Log("ChargerName is '%v'", chargerName)
+	log.Info_Log("Charger name is '%v'", chargerName)
 
 	// Get Charger from the Configs
 	chargerObj, err := serverConfigs.GetChargerObj(chargerName)
@@ -91,14 +91,14 @@ func GetMessageStatusAPI(reference string, MQueue *SimpleMessageQueue, log *logg
 		return
 	}
 
-	log.Info_Log("Reference is '%v'", reference)
-
 	message, success := MQueue.GetMessage(reference)
 	if !success {
 		http.Error(w, string(CreateFailResponse("Message is not exist")), http.StatusOK)
 		log.Error_Log("[%s] Message is not exists in the queue with uniqueID", reference)
 		return
 	}
+
+	log.Info_Log("[%v] Message with action '%s'", reference, message.Action)
 
 	jsonResult, err := json.Marshal(message)
 	if err != nil {
@@ -145,7 +145,7 @@ func TriggerActionAPI(serverConfigs *Configs, MQueue *SimpleMessageQueue, log *l
 	chargerObj, err := serverConfigs.GetChargerObj(chargerName)
 	if err != nil || chargerObj == nil {
 		// There is no charger with specified name in the configs
-		log.Error_Log("GetChargerObj for '%v' returns error '%v'", chargerName, err)
+		log.Error_Log("[%s] GetChargerObj returns error '%v'", chargerName, err)
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
@@ -153,7 +153,7 @@ func TriggerActionAPI(serverConfigs *Configs, MQueue *SimpleMessageQueue, log *l
 	// Sanitize the TriggerMessage type from the request
 	if !core.SanitizeTriggerMessageType(action) {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
-		log.Error_Log("TriggerMessage type '%v' is not supported", action)
+		log.Error_Log("[%s] TriggerMessage type '%v' is not supported", chargerName, action)
 		return
 	}
 
@@ -171,7 +171,7 @@ func TriggerActionAPI(serverConfigs *Configs, MQueue *SimpleMessageQueue, log *l
 	callMessageString, messageErr := callMessageRequest.ToString()
 	if messageErr != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		log.Error_Log("Error to generate callMessage: '%v'", messageErr)
+		log.Error_Log("[%s] Error to generate callMessage: '%v'", chargerName, messageErr)
 		return
 	}
 
@@ -181,12 +181,12 @@ func TriggerActionAPI(serverConfigs *Configs, MQueue *SimpleMessageQueue, log *l
 	addingErr := MQueue.Add(callMessageRequest.UniqueID, queueMessage)
 	if addingErr != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		log.Error_Log("Error to add message to the queue: '%v'", addingErr)
+		log.Error_Log("[%s] Error to add message [%v] to the queue, error: '%v'", chargerName, callMessageRequest.UniqueID, addingErr)
 		return
 	}
 
 	// Send to write goroutine message's uniqueid
-	(*chargerObj).WriteChannel <- callMessageRequest.UniqueID
+	chargerObj.WriteChannel <- callMessageRequest.UniqueID
 
 	// Send response in json format
 	w.Header().Set("Content-Type", "application/json")

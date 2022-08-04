@@ -70,7 +70,7 @@ func main() {
 	router.GET("/message/:messageReference/status", messageStatusAPIHandler)
 	router.GET("/charger/:chargerName/status", chargerStatusAPIHandler)
 	router.POST("/command/:chargerName/triggeraction/:action", triggerActionAPIHandler)
-	// Set router for the ocpp V1.6 connection in the json format
+	// Set router for the ocpp V1.6 (json) connection
 	router.GET("/ocppj/1.6/:chargerName", wsChargerHandler)
 	// Start server
 	log.Error_Log("Server fata errorr: '%v'", http.ListenAndServe(":8080", router))
@@ -154,54 +154,53 @@ func wsChargerHandler(w http.ResponseWriter, r *http.Request, ps httprouter.Para
 	log.Info_Log("Handle income wsCharger request from Host '%v' and Path '%v'", r.URL.Host, r.URL.Path)
 
 	chargerName := ps.ByName("chargerName")
-	log.Info_Log("HTTP is connected. Charger name '%v'", chargerName)
+	log.Info_Log("[%v] HTTP is connected", chargerName)
 
 	// Get Charger from the Configs
 	chargerObj, err := ServerConfigs.GetChargerObj(chargerName)
-	if err != nil {
+	if err != nil || chargerObj == nil {
 		// There is no charger with specified name in the configs
-		http.Error(w, "Not allowed to connect for specified charger", http.StatusBadRequest)
-		log.Error_Log("Not allowed to connect for specified charger '%v' with error '%v'", chargerName, err)
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		log.Error_Log("[%v] There is no charger with specified name with an error '%v'", chargerName, err)
 		return
 	}
 
 	// Check if charger already has connection with server
-	if (*chargerObj).WebSocketConnected {
+	if chargerObj.WebSocketConnected {
 		// Requested charger is connected to server already
-		log.Info_Log("Charger '%v' is connected already", chargerName)
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		log.Info_Log("[%v] Charger is connected already", chargerName)
 		return
 	}
 
-	log.Info_Log("Charger '%v' is exists and websocket connection is not established yet. Will try now", chargerName)
+	log.Info_Log("[%v] Charger is exists and websocket connection is not established yet. Will try now", chargerName)
 
 	//Convert http request to WebSocket
 	conn, err := websocket.Upgrade(w, r, w.Header(), 1024, 1024)
 	if err != nil {
-		http.Error(w, "Could not open websocket connection", http.StatusBadRequest)
-		log.Error_Log("Could not open websocket connection for charger name '%v' with error '%v'", chargerName, err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Error_Log("[%v] Could not open websocket connection with error '%v'", chargerName, err)
 		return
 	}
 
-	log.Info_Log("Websocket is connected. Charger name '%v'", chargerName)
+	log.Info_Log("[%v] Connection is upgraded to Websocket type", chargerName)
 
 	// Create log instance with file name "server.{chargerName}"
 	chargerLog := logging.LogConstructor(logFilesPath+"."+chargerName, true)
-
+	// Create OCPP Hadlers
 	ocppHandlers := example.OCPPHandlersConstructor()
-	ocppHandlers.Log = chargerLog
-	ocppHandlers.MQueue = &MQueue
 
-	// Store remote IP
-	chargerObj.InboundIP = r.RemoteAddr
-	// Set Charger's WebSocket flag as connected
-	chargerObj.WebSocketConnected = true
-	// Add charger details to ocppHandlers
-	ocppHandlers.Charger = chargerObj
+	// Update charger object
+	chargerObj.InboundIP = r.RemoteAddr                                    // Store remote IP
+	chargerObj.WebSocketConnected = true                                   // Set Charger's WebSocket flag as connected
+	chargerObj.AuthConnection = ocppHandlers.Authorisation(chargerName, r) // Authorise request
 
-	// Authorise request
-	chargerObj.AuthConnection = false
-	ocppHandlers.Authorisation(chargerName, r)
-	// Socket activity flag
+	// Update ocppHandlers object
+	ocppHandlers.Log = chargerLog     // Add log
+	ocppHandlers.MQueue = &MQueue     // Add pointer to the Message queue
+	ocppHandlers.Charger = chargerObj // Add charger details to ocppHandlers
+
+	// Define socket activity flag
 	isSocketActive := true
 
 	// Start Read and Write gorutine
@@ -247,8 +246,8 @@ func logReaderRD(conn *websocket.Conn, chargerName string, isSocketActive *bool,
 		if readingSocketError != nil {
 			chargerLog.Error_Log("[%v] Client is disconnected with error: '%v'", tools.GetGoID(), readingSocketError)
 			*isSocketActive = false
-			(*chargerObj).WebSocketConnected = false
-			chargerObj.WriteChannel <- "wakeup"
+			chargerObj.WebSocketConnected = false
+			chargerObj.WriteChannel <- "wakeup" // Send string to wakeup write gorutine
 			break
 		}
 
@@ -264,7 +263,7 @@ func logReaderRD(conn *websocket.Conn, chargerName string, isSocketActive *bool,
 		// Add message to the queue
 		addingErr := MQueue.Add(uniqueID, qMessage)
 		if addingErr != nil {
-			log.Error_Log("Error to add message to the queue: '%v'", addingErr)
+			log.Error_Log("[%v] Error to add message to the queue: '%v'", tools.GetGoID(), addingErr)
 		}
 
 		// Call OCPP message handler
@@ -272,12 +271,12 @@ func logReaderRD(conn *websocket.Conn, chargerName string, isSocketActive *bool,
 		*isSocketActive = socketStatus
 
 		if responseErr != nil {
-			chargerLog.Error_Log("Response error: '%v'", responseErr)
+			chargerLog.Error_Log("[%v] Response error: '%v'", tools.GetGoID(), responseErr)
 		}
 
 		// If handler generated callResult message - send it to the charger
 		if response != "" {
-			(*chargerObj).WriteChannel <- uniqueID
+			chargerObj.WriteChannel <- uniqueID
 		}
 	}
 
@@ -309,7 +308,7 @@ func logReaderWR(conn *websocket.Conn, chargerName string, isSocketActive *bool,
 
 	for {
 		// Wait for the message from channel
-		uniqueID := <-(*chargerObj).WriteChannel
+		uniqueID := <-chargerObj.WriteChannel
 		//log.Info_Log("[%v] logReaderWR. UniqueuID '%v'", tools.GetGoID(), uniqueID)
 
 		// Check if gorutine must to be finished
@@ -323,7 +322,7 @@ func logReaderWR(conn *websocket.Conn, chargerName string, isSocketActive *bool,
 
 		//Send response to the charger
 		if err := conn.WriteMessage(websocket.TextMessage, []byte(qMessage.Sent)); err != nil {
-			chargerLog.Error_Log("Send error: '%v'", err)
+			chargerLog.Error_Log("[%v] Send error: '%v'", tools.GetGoID(), err)
 			return
 		}
 
@@ -331,7 +330,7 @@ func logReaderWR(conn *websocket.Conn, chargerName string, isSocketActive *bool,
 		qMessage.Status = example.MESSAGE_TYPE_COMPLETED
 		MQueue.UpdateByUniqueID(uniqueID, qMessage)
 
-		chargerLog.Info_Log("Sent to charger '%v'", qMessage.Sent)
+		chargerLog.Info_Log("[%v] Sent to charger '%v'", tools.GetGoID(), qMessage.Sent)
 	}
 
 	// Clear Charger parameters

@@ -86,7 +86,7 @@ func (cs *OCPPHandlers) finaliseReqHandler(callMessage messages.CallMessage, res
  * Function : OCPPHandlers::finaliseRespHandler
  *
  *  Purpose : Using to finalise Response message
- *			  Delete message from the queue
+ *			  Update message status in the queue
  *
  *    Input : uniqueID string - message's unique ID
  *			  socketStatus bool - false - when connection to charger needs to be closed
@@ -96,15 +96,12 @@ func (cs *OCPPHandlers) finaliseReqHandler(callMessage messages.CallMessage, res
  *
  */
 func (cs *OCPPHandlers) finaliseRespHandler(uniqueID string, socketStatus bool) (error, bool) {
-
-	// Before end the handler delete message from MQueue
-	err := cs.MQueue.DeleteByUniqueID(uniqueID)
-
-	if err == nil {
-		cs.Log.Info_Log("%v", cs.MQueue.printStatus())
-	}
-
-	return err, socketStatus
+	// Get message from the queue
+	qMessage, _ := cs.MQueue.GetMessage(uniqueID)
+	// update status of the current message
+	qMessage.Status = MESSAGE_TYPE_COMPLETED
+	// Update message in the queue
+	return cs.MQueue.UpdateByUniqueID(uniqueID, qMessage), socketStatus
 }
 
 /****************************************************************************************
@@ -144,16 +141,13 @@ func (cs *OCPPHandlers) GetActionHandler(uniqueID string) string {
  */
 func (cs *OCPPHandlers) Authorisation(chargerName string, request *http.Request) bool {
 
-	cs.Log.Info_Log("Auth request from URL '%s'", request.RequestURI)
-	cs.Log.Info_Log("Header is '%s'", request.Header["Authorisation"])
+	cs.Log.Info_Log("[%v] Auth request from URL '%s'", chargerName, request.RequestURI)
+	cs.Log.Info_Log("[%v] Auth header in request is '%s'", chargerName, request.Header["Authorisation"])
 
-	if cs.Charger == nil {
-		cs.Log.Error_Log("Charger struct is nil")
-	}
+	// Here you can add your own authorisation process ....
 
-	cs.Charger.AuthConnection = true
 	cs.Log.Info_Log("[%v] Authorisation is '%v'", chargerName, cs.Charger.AuthConnection)
-
+	// Right now we will authorise request
 	return true
 }
 
